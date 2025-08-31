@@ -7,9 +7,9 @@ import heroImage from '@/assets/hero-image.jpg';
 const Home = () => {
   const leadership = [
     {
-      name: "Sarah Johnson",
+      name: "Manoj Regmi",
       role: "Chief Executive Officer",
-      bio: "15+ years of experience leading digital transformation initiatives at Fortune 500 companies.",
+      bio: "Over 16 years of experience leading digital transformation initiatives at Fortune 500 companies.",
       icon: <Users className="w-6 h-6 text-primary" />
     },
     {
@@ -182,13 +182,13 @@ const Home = () => {
       <section className="py-20 gradient-primary">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-6 text-primary-foreground">
+            <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-6 text-primary-foreground drop-shadow-md">
               Ready to Transform Your Business?
             </h2>
-            <p className="text-xl text-primary-light mb-8">
+            <p className="text-xl text-primary-light mb-8 drop-shadow-sm font-medium">
               Let's discuss how our AI and analytics solutions can drive your success.
             </p>
-            <Button variant="hero" size="lg" className="bg-white text-primary hover:bg-white/90" asChild>
+            <Button variant="hero" size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold" asChild>
               <Link to="/contact" className="flex items-center">
                 Start Your Journey
                 <ArrowRight className="ml-2" size={20} />

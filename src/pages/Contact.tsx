@@ -177,7 +177,7 @@ const Contact = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground mb-1">Phone</h3>
-                        <p className="text-muted-foreground">+1 (555) 123-4567</p>
+                        <p className="text-muted-foreground">657 216 0194</p>
                         <p className="text-sm text-muted-foreground mt-1">
                           Monday - Friday, 9:00 AM - 6:00 PM EST
                         </p>
@@ -196,8 +196,7 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-1">Office</h3>
                         <p className="text-muted-foreground">
-                          123 Business Plaza, Suite 500<br />
-                          New York, NY 10001<br />
+                          Boulder, Colorado<br />
                           United States
                         </p>
                       </div>
@@ -233,7 +232,11 @@ const Contact = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold text-foreground mb-1">LinkedIn</h3>
-                        <p className="text-muted-foreground">@smarttechanalytics</p>
+                        <p className="text-muted-foreground">
+                          <a href="https://www.linkedin.com/feed/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                            https://www.linkedin.com/feed/
+                          </a>
+                        </p>
                         <p className="text-sm text-muted-foreground mt-1">
                           Follow us for industry insights and updates
                         </p>
