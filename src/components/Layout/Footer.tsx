@@ -69,16 +69,16 @@ const Footer = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Phone size={16} className="text-primary" />
-                <span className="text-primary-light text-sm">+1 (555) 123-4567</span>
+                <span className="text-primary-light text-sm">657 216 0194</span>
               </div>
               <div className="flex items-center space-x-2">
                 <MapPin size={16} className="text-primary" />
-                <span className="text-primary-light text-sm">New York, NY</span>
+                <span className="text-primary-light text-sm">Boulder, Colorado</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <LinkedinIcon size={16} className="text-primary hover:text-primary-foreground cursor-pointer transition-smooth" />
+              <a href="https://www.linkedin.com/company/smarttechanalytics/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 hover:text-primary-foreground transition-smooth">
+                <LinkedinIcon size={16} className="text-primary" />
                 <span className="text-primary-light text-sm">LinkedIn</span>
-              </div>
+              </a>
             </div>
           </div>
         </div>

@@ -188,7 +188,7 @@ const Home = () => {
             <p className="text-xl text-primary-light mb-8 drop-shadow-sm font-medium">
               Let's discuss how our AI and analytics solutions can drive your success.
             </p>
-            <Button variant="hero" size="lg" className="bg-white text-primary hover:bg-white/90 font-semibold" asChild>
+            <Button variant="hero" size="lg" className="bg-white text-primary hover:bg-white/90 font-bold text-lg shadow-lg" asChild>
               <Link to="/contact" className="flex items-center">
                 Start Your Journey
                 <ArrowRight className="ml-2" size={20} />
