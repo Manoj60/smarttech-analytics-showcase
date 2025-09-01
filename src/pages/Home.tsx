@@ -189,7 +189,7 @@ const Home = () => {
               Let's discuss how our AI and analytics solutions can drive your success.
             </p>
             <Button variant="hero" size="lg" className="bg-white text-primary hover:bg-white/90 font-bold text-lg shadow-lg" asChild>
-              <Link to="/contact" className="flex items-center">
+              <Link to="/contact" className="flex items-center text-primary font-bold">
                 Start Your Journey
                 <ArrowRight className="ml-2" size={20} />
               </Link>
