@@ -233,8 +233,8 @@ const Contact = () => {
                       <div>
                         <h3 className="font-semibold text-foreground mb-1">LinkedIn</h3>
                         <p className="text-muted-foreground">
-                          <a href="https://www.linkedin.com/feed/" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
-                            https://www.linkedin.com/feed/
+                          <a href="https://www.linkedin.com/company/smarttechanalytics/?viewAsMember=true" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
+                            Smart Tech Analytics
                           </a>
                         </p>
                         <p className="text-sm text-muted-foreground mt-1">
