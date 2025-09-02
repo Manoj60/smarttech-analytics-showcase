@@ -188,8 +188,8 @@ const Home = () => {
             <p className="text-xl text-white mb-8 font-semibold" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>
               Let's discuss how our AI and analytics solutions can drive your success.
             </p>
-            <Button variant="hero" size="lg" className="bg-white text-primary hover:bg-white/90 font-bold text-lg shadow-lg" asChild>
-              <Link to="/contact" className="flex items-center text-primary font-bold">
+            <Button variant="hero" size="lg" className="bg-green-600 text-white hover:bg-green-700 font-bold text-lg shadow-lg" asChild>
+              <Link to="/contact" className="flex items-center text-white font-bold">
                 Start Your Journey
                 <ArrowRight className="ml-2" size={20} />
               </Link>
