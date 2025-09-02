@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Phone, MapPin, Clock, LinkedinIcon, Send } from 'lucide-react';
 
@@ -310,8 +311,8 @@ const Contact = () => {
             <p className="text-xl text-primary-light mb-8">
               Schedule a free consultation to discuss your data and analytics challenges and discover how we can help.
             </p>
-            <Button variant="hero" size="lg" className="bg-green-600 text-white hover:bg-green-700 font-bold text-lg shadow-lg">
-              Schedule Free Consultation
+            <Button variant="hero" size="lg" className="bg-green-600 text-white hover:bg-green-700 font-bold text-lg shadow-lg" asChild>
+              <Link to="/contact">Schedule Free Consultation</Link>
             </Button>
           </div>
         </div>

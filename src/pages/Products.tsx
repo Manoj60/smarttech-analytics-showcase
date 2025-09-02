@@ -132,7 +132,7 @@ const Products = () => {
                             <Link to="/contact">Learn More</Link>
                           </Button>
                           <Button variant="outline" size="sm" asChild>
-                            <Link to="/case-studies">View Case Studies</Link>
+                            <Link to="/contact">View Case Studies</Link>
                           </Button>
                         </div>
                       </CardContent>
@@ -213,7 +213,7 @@ const Products = () => {
                 <Link to="/contact">Request Demo</Link>
               </Button>
               <Button variant="outline" size="lg" className="bg-white/10 border-white/30 text-primary-foreground hover:bg-white/20" asChild>
-                <Link to="/services">View Services</Link>
+                <Link to="/contact">View Services</Link>
               </Button>
             </div>
           </div>

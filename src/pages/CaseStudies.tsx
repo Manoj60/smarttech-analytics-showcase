@@ -237,7 +237,7 @@ const CaseStudies = () => {
                 <Link to="/contact">Start Your Project</Link>
               </Button>
               <Button variant="outline" size="lg" className="bg-white/10 border-white/30 text-primary-foreground hover:bg-white/20" asChild>
-                <Link to="/services">Explore Services</Link>
+                <Link to="/contact">Explore Services</Link>
               </Button>
             </div>
           </div>

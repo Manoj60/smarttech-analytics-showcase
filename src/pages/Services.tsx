@@ -262,7 +262,7 @@ const Services = () => {
                 <Link to="/contact">Schedule Consultation</Link>
               </Button>
               <Button variant="outline" size="lg" className="bg-white/10 border-white/30 text-primary-foreground hover:bg-white/20" asChild>
-                <Link to="/case-studies">View Success Stories</Link>
+                <Link to="/contact">View Success Stories</Link>
               </Button>
             </div>
           </div>
