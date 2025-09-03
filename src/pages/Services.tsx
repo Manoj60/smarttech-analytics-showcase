@@ -258,7 +258,7 @@ const Services = () => {
               Let's discuss your specific needs and develop a customized solution that drives measurable results.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button variant="hero" size="lg" className="bg-green-600 text-white hover:bg-green-700 font-bold text-lg shadow-lg" asChild>
+              <Button variant="hero" size="lg" className="bg-green-600 text-white hover:bg-green-700 font-bold text-lg" asChild>
                 <Link to="/contact">Schedule Consultation</Link>
               </Button>
               <Button variant="outline" size="lg" className="bg-white/10 border-white/30 text-primary-foreground hover:bg-white/20" asChild>

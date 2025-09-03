@@ -311,7 +311,7 @@ const Contact = () => {
             <p className="text-xl text-white mb-8 font-semibold">
               Schedule a free consultation to discuss your data and analytics challenges and discover how we can help.
             </p>
-            <Button variant="hero" size="lg" className="bg-green-600 text-white hover:bg-green-700 font-bold text-lg shadow-lg" asChild>
+            <Button variant="hero" size="lg" className="bg-green-600 text-white hover:bg-green-700 font-bold text-lg" asChild>
               <Link to="/contact">Schedule Free Consultation</Link>
             </Button>
           </div>
