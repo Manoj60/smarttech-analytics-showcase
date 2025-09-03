@@ -182,14 +182,14 @@ const Home = () => {
       <section className="py-20 gradient-primary">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-6 text-white drop-shadow-lg" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
+            <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-6 text-white">
               Ready to Transform Your Business?
             </h2>
-            <p className="text-xl text-white mb-8 font-semibold" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>
+            <p className="text-xl text-white mb-8 font-semibold">
               Let's discuss how our AI and analytics solutions can drive your success.
             </p>
-            <Button variant="hero" size="lg" className="bg-green-600 text-white hover:bg-green-700 font-bold text-lg shadow-lg" asChild>
-              <Link to="/contact" className="flex items-center text-white font-bold">
+            <Button variant="hero" size="lg" asChild>
+              <Link to="/contact" className="flex items-center">
                 Start Your Journey
                 <ArrowRight className="ml-2" size={20} />
               </Link>
