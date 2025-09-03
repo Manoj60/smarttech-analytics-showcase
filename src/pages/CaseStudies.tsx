@@ -226,10 +226,10 @@ const CaseStudies = () => {
       <section className="py-20 gradient-primary">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-6 text-white drop-shadow-lg" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
+            <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-6 text-white">
               Ready to Write Your Success Story?
             </h2>
-            <p className="text-xl text-white mb-8 font-semibold" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>
+            <p className="text-xl text-white mb-8 font-semibold">
               Join our growing list of satisfied clients who have transformed their businesses with our solutions.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
