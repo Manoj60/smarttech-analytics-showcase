@@ -305,10 +305,10 @@ const Contact = () => {
       <section className="py-20 gradient-primary">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-3xl mx-auto">
-            <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-6 text-primary-foreground">
+            <h2 className="text-3xl lg:text-4xl font-heading font-bold mb-6 text-white drop-shadow-lg" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.5)' }}>
               Let's Transform Your Business Together
             </h2>
-            <p className="text-xl text-primary-light mb-8">
+            <p className="text-xl text-white mb-8 font-semibold" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.5)' }}>
               Schedule a free consultation to discuss your data and analytics challenges and discover how we can help.
             </p>
             <Button variant="hero" size="lg" className="bg-green-600 text-white hover:bg-green-700 font-bold text-lg shadow-lg" asChild>
