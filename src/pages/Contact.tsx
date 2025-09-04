@@ -63,7 +63,7 @@ const Contact = () => {
             {/* Contact Form */}
             <div>
               <h2 className="text-3xl font-heading font-bold mb-6 text-foreground">
-                Get In Touch
+                Let's Connect
               </h2>
               <p className="text-muted-foreground mb-8 leading-relaxed">
                 Fill out the form below and our team will get back to you within 24 hours. We're here to help you achieve your data and analytics goals.
