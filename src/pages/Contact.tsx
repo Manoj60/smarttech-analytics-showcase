@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Phone, MapPin, Clock, LinkedinIcon, Send } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 const Contact = () => {
   const { toast } = useToast();
@@ -21,16 +22,35 @@ const Contact = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate form submission
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    toast({
-      title: "Message Sent Successfully!",
-      description: "Thank you for your interest. We'll get back to you within 24 hours.",
-    });
+    try {
+      const { error } = await supabase
+        .from('DIM_USER')
+        .insert({
+          user_name: formData.name,
+          email_address: formData.email,
+          message_description: formData.message
+        });
 
-    setFormData({ name: '', email: '', message: '' });
-    setIsSubmitting(false);
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Message Sent Successfully!",
+        description: "Thank you for your interest. We'll get back to you within 24 hours.",
+      });
+
+      setFormData({ name: '', email: '', message: '' });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "There was an error sending your message. Please try again.",
+        variant: "destructive",
+      });
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
