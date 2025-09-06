@@ -23,7 +23,7 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('DIM_USER')
         .insert({
           user_name: formData.name,
