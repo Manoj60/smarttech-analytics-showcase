@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      dim_user: {
+        Row: {
+          created_at: string
+          email_address: string
+          id: number
+          message_description: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          email_address: string
+          id?: number
+          message_description?: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          email_address?: string
+          id?: number
+          message_description?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
+      DIM_USER: {
+        Row: {
+          created_at: string
+          email_address: string
+          id: number
+          message_description: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          email_address?: string
+          id?: number
+          message_description?: string
+          user_name?: string
+        }
+        Update: {
+          created_at?: string
+          email_address?: string
+          id?: number
+          message_description?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
