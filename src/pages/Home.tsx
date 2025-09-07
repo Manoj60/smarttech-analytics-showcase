@@ -9,7 +9,7 @@ const Home = () => {
     {
       name: "Manoj Regmi",
       role: "Chief Executive Officer",
-      bio: "Over 16 years of experience leading digital transformation initiatives at Fortune 500 companies.",
+      bio: "16 years of overall experience leading digital transformation initiatives at S&P 500 companies, author of two books, and published 15+ articles about business and technical aspects.",
       icon: <Users className="w-6 h-6 text-primary" />
     },
     {
