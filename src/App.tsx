@@ -5,13 +5,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Layout/Header";
 import Footer from "./components/Layout/Footer";
-import ChatWidget from "./components/Chat/ChatWidget";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Services from "./pages/Services";
 import CaseStudies from "./pages/CaseStudies";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import ChatWidget from "./components/ChatWidget/ChatWidget";
 
 const queryClient = new QueryClient();
 
