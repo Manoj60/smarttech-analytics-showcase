@@ -176,7 +176,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
       ) : (
         <Card className="w-96 h-[500px] shadow-xl border-0 bg-background">
           <CardHeader className="flex flex-row items-center justify-between p-4 bg-primary text-white">
-            <CardTitle className="text-lg font-semibold">Customer Support</CardTitle>
+            <CardTitle className="text-lg font-semibold">Smart Tech Analytics Virtual Assistant</CardTitle>
             <Button
               onClick={() => setIsOpen(false)}
               variant="ghost"

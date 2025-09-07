@@ -45,10 +45,10 @@ const ChatUserForm: React.FC<ChatUserFormProps> = ({ onSubmit }) => {
     <div className="p-6 h-full flex flex-col justify-center">
       <div className="text-center mb-6">
         <h3 className="text-lg font-semibold text-foreground mb-2">
-          Welcome to Customer Support
+          Smart Tech Analytics Virtual Assistant
         </h3>
         <p className="text-sm text-muted-foreground">
-          Please provide your details to start chatting with our AI assistant
+          Please provide your details to start chatting with our Smart Tech Analytics assistant
         </p>
       </div>
       
