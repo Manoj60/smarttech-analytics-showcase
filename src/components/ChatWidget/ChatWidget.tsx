@@ -27,6 +27,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentMessage, setCurrentMessage] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationSecret, setConversationSecret] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -40,27 +41,35 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
   }, [messages]);
 
   useEffect(() => {
-    if (conversationId) {
+    if (conversationId && conversationSecret) {
       loadMessageHistory();
     }
-  }, [conversationId]);
+  }, [conversationId, conversationSecret]);
 
   const loadMessageHistory = async () => {
-    if (!conversationId) return;
+    if (!conversationId || !conversationSecret) return;
 
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
+      const { data, error } = await supabase.functions.invoke('chat-support', {
+        body: {
+          action: 'history',
+          conversationId: conversationId,
+          conversationSecret: conversationSecret
+        }
+      });
 
       if (error) {
         console.error('Error loading message history:', error);
         return;
       }
 
-      setMessages((data || []).map(msg => ({
+      const response = data;
+      if (response.error) {
+        console.error('Server error loading history:', response.error);
+        return;
+      }
+
+      setMessages((response.messages || []).map((msg: any) => ({
         id: msg.id,
         content: msg.content,
         role: msg.role as 'user' | 'assistant',
@@ -101,8 +110,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
         body: {
           message: currentMessage,
           conversationId: conversationId,
+          conversationSecret: conversationSecret,
           userName: userInfo.name,
-          userEmail: userInfo.email
+          userEmail: userInfo.email,
+          action: 'send'
         }
       });
 
@@ -116,20 +127,25 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
         throw new Error(response.error);
       }
 
+      // Update conversation credentials if this is a new conversation
       if (!conversationId && response.conversationId) {
         setConversationId(response.conversationId);
+        setConversationSecret(response.conversationSecret);
+        
+        // Store in localStorage for persistence
+        localStorage.setItem('chatConversationId', response.conversationId);
+        localStorage.setItem('chatConversationSecret', response.conversationSecret);
       }
 
-      const assistantMessage: Message = {
-        id: `assistant-${Date.now()}`,
-        content: response.message,
-        role: 'assistant',
-        created_at: new Date().toISOString()
-      };
-
-      setMessages(prev => prev.map(msg => 
-        msg.id === userMessage.id ? { ...userMessage, id: `user-${Date.now()}` } : msg
-      ).concat(assistantMessage));
+      // Use the complete message history from the server response
+      if (response.messages) {
+        setMessages(response.messages.map((msg: any) => ({
+          id: msg.id,
+          content: msg.content,
+          role: msg.role as 'user' | 'assistant',
+          created_at: msg.created_at
+        })));
+      }
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -158,10 +174,26 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
     setUserInfo(null);
     setMessages([]);
     setConversationId(null);
+    setConversationSecret(null);
     setCurrentMessage('');
     setIsTyping(false);
     setIsSending(false);
+    
+    // Clear localStorage
+    localStorage.removeItem('chatConversationId');
+    localStorage.removeItem('chatConversationSecret');
   };
+
+  // Load conversation from localStorage on component mount
+  useEffect(() => {
+    const savedConversationId = localStorage.getItem('chatConversationId');
+    const savedConversationSecret = localStorage.getItem('chatConversationSecret');
+    
+    if (savedConversationId && savedConversationSecret) {
+      setConversationId(savedConversationId);
+      setConversationSecret(savedConversationSecret);
+    }
+  }, []);
 
   return (
     <div className={`fixed bottom-4 right-4 z-50 ${className}`}>

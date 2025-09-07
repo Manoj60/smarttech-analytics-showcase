@@ -7,6 +7,13 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Generate a secure random conversation secret
+function generateConversationSecret(): string {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -14,7 +21,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationId, userName, userEmail } = await req.json();
+    const { message, conversationId, conversationSecret, userName, userEmail, action = 'send' } = await req.json();
     
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -27,17 +34,60 @@ serve(async (req) => {
     // Initialize Supabase client
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
+    // Handle message history fetch
+    if (action === 'history') {
+      if (!conversationId || !conversationSecret) {
+        throw new Error('Missing conversation ID or secret for history request');
+      }
+
+      // Verify conversation access
+      const { data: conversation } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .eq('conversation_secret', conversationSecret)
+        .maybeSingle();
+
+      if (!conversation) {
+        throw new Error('Invalid conversation access');
+      }
+
+      // Get messages for this conversation
+      const { data: messages, error: messagesError } = await supabase
+        .from('messages')
+        .select('id, content, role, created_at')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (messagesError) {
+        console.error('Error fetching messages:', messagesError);
+        throw new Error('Failed to fetch messages');
+      }
+
+      return new Response(JSON.stringify({ messages: messages || [] }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate message length for send action
+    if (message && message.length > 2000) {
+      throw new Error('Message too long. Maximum 2000 characters allowed.');
+    }
+
     // Get conversation context or create new conversation
     let currentConversationId = conversationId;
+    let currentConversationSecret = conversationSecret;
     
     if (!currentConversationId) {
-      // Create new conversation
+      // Create new conversation with secret
+      const newSecret = generateConversationSecret();
       const { data: newConversation, error: convError } = await supabase
         .from('conversations')
         .insert({
           user_name: userName,
           user_email: userEmail,
-          status: 'active'
+          status: 'active',
+          conversation_secret: newSecret
         })
         .select()
         .single();
@@ -48,6 +98,19 @@ serve(async (req) => {
       }
 
       currentConversationId = newConversation.id;
+      currentConversationSecret = newSecret;
+    } else {
+      // Verify conversation access for existing conversation
+      const { data: existingConversation } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .eq('conversation_secret', conversationSecret)
+        .maybeSingle();
+
+      if (!existingConversation) {
+        throw new Error('Invalid conversation access');
+      }
     }
 
     // Store user message
@@ -77,16 +140,23 @@ serve(async (req) => {
     }
 
     // Create system prompt with website context
-    const systemPrompt = `You are a helpful customer support assistant for this company's website. 
-    
-    Website Context:
-    - This appears to be a business website with sections for Home, Products, Services, Case Studies, and Contact
-    - You should help users with general inquiries about the company's services and products
-    - For specific technical support or detailed product information, direct users to contact the support team directly
-    - Be friendly, professional, and helpful
-    - If you don't know something specific about the company, be honest and offer to connect them with a human agent
-    
-    Keep responses concise and helpful. Always maintain a professional but friendly tone.`;
+    const systemPrompt = `You are a helpful customer support assistant for Smart Tech Analytics, a company that provides advanced technology solutions and analytics services. 
+
+Our company specializes in:
+- Data analytics and business intelligence
+- Cloud computing solutions  
+- AI and machine learning services
+- Digital transformation consulting
+- Custom software development
+
+You should be friendly, professional, and knowledgeable about our services. Help customers with:
+- Product information and features
+- Technical support questions
+- Pricing and plan comparisons
+- Account setup and troubleshooting
+- General inquiries about our technology solutions
+
+The customer's name is ${userName} and their email is ${userEmail}. Always maintain a helpful and solution-oriented tone.`;
 
     // Format conversation history for OpenAI
     const messages = [
@@ -135,9 +205,18 @@ serve(async (req) => {
       throw new Error('Failed to store AI message');
     }
 
+    // Get updated message history to return
+    const { data: updatedMessages } = await supabase
+      .from('messages')
+      .select('id, content, role, created_at')
+      .eq('conversation_id', currentConversationId)
+      .order('created_at', { ascending: true });
+
     return new Response(JSON.stringify({ 
       message: aiMessage,
-      conversationId: currentConversationId 
+      conversationId: currentConversationId,
+      conversationSecret: currentConversationSecret,
+      messages: updatedMessages || []
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

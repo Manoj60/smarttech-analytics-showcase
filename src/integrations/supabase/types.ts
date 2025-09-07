@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       conversations: {
         Row: {
+          conversation_secret: string | null
           created_at: string
           id: string
           status: string
@@ -24,6 +25,7 @@ export type Database = {
           user_name: string
         }
         Insert: {
+          conversation_secret?: string | null
           created_at?: string
           id?: string
           status?: string
@@ -32,6 +34,7 @@ export type Database = {
           user_name: string
         }
         Update: {
+          conversation_secret?: string | null
           created_at?: string
           id?: string
           status?: string
@@ -126,7 +129,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      verify_conversation_access: {
+        Args: {
+          conversation_id_param: string
+          conversation_secret_param: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
