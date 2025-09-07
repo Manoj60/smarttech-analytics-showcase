@@ -2,8 +2,9 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
+// Tighter CORS - replace '*' with your actual domain in production  
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': '*', // TODO: Replace with your domain
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -21,7 +22,44 @@ serve(async (req) => {
   }
 
   try {
+    const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    console.log(`Chat request from IP: ${clientIP.substring(0, 10)}...`); // Log partial IP for privacy
+    
+    // Rate limiting check
+    const rateLimitResult = await checkRateLimit(clientIP, 'chat-support');
+    if (!rateLimitResult.allowed) {
+      console.log(`Rate limit exceeded for IP: ${clientIP.substring(0, 10)}...`);
+      return new Response(JSON.stringify({ 
+        error: 'Too many requests. Please wait before sending another message.' 
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { message, conversationId, conversationSecret, userName, userEmail, action = 'send' } = await req.json();
+    
+    // Input validation for send action
+    if (action !== 'history' && (!message || typeof message !== 'string' || message.trim().length === 0)) {
+      return new Response(JSON.stringify({ error: 'Message cannot be empty' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    if (userName && (typeof userName !== 'string' || userName.length > 100)) {
+      return new Response(JSON.stringify({ error: 'Invalid user name' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    
+    if (userEmail && (typeof userEmail !== 'string' || userEmail.length > 254 || !isValidEmail(userEmail))) {
+      return new Response(JSON.stringify({ error: 'Invalid email address' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     
     const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
@@ -222,7 +260,7 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
     });
 
   } catch (error) {
-    console.error('Error in chat-support function:', error);
+    console.error('Error in chat-support function:', error.message);
     return new Response(JSON.stringify({ 
       error: error.message || 'Internal server error' 
     }), {
@@ -231,3 +269,63 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
     });
   }
 });
+
+// Rate limiting function
+async function checkRateLimit(ip: string, functionName: string): Promise<{ allowed: boolean }> {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  const now = new Date();
+  const windowStart = new Date(now.getTime() - 60000); // 1 minute window
+  
+  try {
+    // Clean up old rate limit records
+    await supabase
+      .from('function_rate_limits')
+      .delete()
+      .lt('window_start', windowStart.toISOString());
+
+    // Check current rate
+    const { data: existing } = await supabase
+      .from('function_rate_limits')
+      .select('request_count')
+      .eq('ip_address', ip)
+      .eq('function_name', functionName)
+      .gte('window_start', windowStart.toISOString())
+      .single();
+
+    if (existing && existing.request_count >= 20) { // 20 requests per minute limit
+      return { allowed: false };
+    }
+
+    // Update or insert rate limit record
+    if (existing) {
+      await supabase
+        .from('function_rate_limits')
+        .update({ request_count: existing.request_count + 1 })
+        .eq('ip_address', ip)
+        .eq('function_name', functionName);
+    } else {
+      await supabase
+        .from('function_rate_limits')
+        .insert({
+          ip_address: ip,
+          function_name: functionName,
+          request_count: 1,
+          window_start: now.toISOString()
+        });
+    }
+
+    return { allowed: true };
+  } catch (error) {
+    console.error('Rate limit check failed:', error.message);
+    return { allowed: true }; // Allow on error to avoid blocking legitimate users
+  }
+}
+
+// Email validation function
+function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
