@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversations: {
+        Row: {
+          created_at: string
+          id: string
+          status: string
+          updated_at: string
+          user_email: string
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_email: string
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_email?: string
+          user_name?: string
+        }
+        Relationships: []
+      }
       dim_user: {
         Row: {
           created_at: string
@@ -61,6 +88,38 @@ export type Database = {
           user_name?: string
         }
         Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

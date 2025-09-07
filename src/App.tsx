@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Header from "./components/Layout/Header";
 import Footer from "./components/Layout/Footer";
+import ChatWidget from "./components/Chat/ChatWidget";
 import Home from "./pages/Home";
 import Products from "./pages/Products";
 import Services from "./pages/Services";
@@ -33,6 +34,7 @@ const App = () => (
             </Routes>
           </main>
           <Footer />
+          <ChatWidget />
         </div>
       </BrowserRouter>
     </TooltipProvider>
