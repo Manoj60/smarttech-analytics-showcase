@@ -26,13 +26,13 @@ const Home = () => {
     }
   ];
 
-  const partners = [
+  const expertise = [
+    "OpenAI",
+    "Claude",
+    "Databricks",
     "Microsoft Azure",
-    "Amazon Web Services", 
-    "Google Cloud Platform",
-    "Snowflake",
-    "Tableau",
-    "Power BI"
+    "Amazon Web Services",
+    "Google Cloud Platform"
   ];
 
   return (
@@ -153,25 +153,25 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Business Partners Section */}
+      {/* Our Expertise Section */}
       <section className="py-20 bg-primary-dark">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center mb-16">
             <h2 className="text-3xl lg:text-5xl font-heading font-bold mb-6 text-primary-foreground">
-              Trusted Partners
+              Our Expertise
             </h2>
             <p className="text-lg text-primary-light">
-              We collaborate with industry-leading technology partners to deliver world-class solutions.
+              We leverage cutting-edge AI technologies and cloud platforms to deliver innovative solutions.
             </p>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
-            {partners.map((partner, index) => (
+            {expertise.map((tech, index) => (
               <div
                 key={index}
                 className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-center border border-white/20 transition-smooth hover:bg-white/20"
               >
-                <p className="text-primary-foreground font-semibold">{partner}</p>
+                <p className="text-primary-foreground font-semibold">{tech}</p>
               </div>
             ))}
           </div>
