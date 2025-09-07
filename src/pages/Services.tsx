@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Target, Cloud, Brain, Database, BarChart3, Shield, Users, Zap } from 'lucide-react';
+import { Target, Cloud, Brain, Database, BarChart3, Shield, Users, Zap, GraduationCap } from 'lucide-react';
 
 const Services = () => {
   const services = [
@@ -51,6 +51,31 @@ const Services = () => {
         "Legacy System Migration",
         "API Development & Management",
         "Data Warehouse Modernization"
+      ]
+    },
+    {
+      title: "Enterprise Reporting & Visualization",
+      icon: <BarChart3 className="w-8 h-8 text-primary" />,
+      description: "Create compelling visualizations and comprehensive reporting solutions that provide actionable insights for all stakeholders.",
+      offerings: [
+        "Interactive Dashboard Development",
+        "Executive Reporting Solutions",
+        "Self-Service Analytics",
+        "Mobile BI Applications",
+        "Embedded Analytics"
+      ]
+    },
+    {
+      title: "Learning Management & Training",
+      icon: <GraduationCap className="w-8 h-8 text-primary" />,
+      description: "Comprehensive training programs and educational services to enhance your team's capabilities and ensure successful technology adoption.",
+      offerings: [
+        "NCLEX Prep & Placement (Healthcare)",
+        "Data Analytics Training Programs",
+        "AI/ML Certification Courses",
+        "Cloud Platform Training",
+        "Custom Curriculum Development",
+        "Corporate Training Solutions"
       ]
     },
     {
