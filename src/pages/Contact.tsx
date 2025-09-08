@@ -23,16 +23,20 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
-      const { error } = await (supabase as any)
-        .from('DIM_USER')
-        .insert({
-          user_name: formData.name,
-          email_address: formData.email,
-          message_description: formData.message
-        });
+      const { data, error } = await supabase.functions.invoke('contact-form', {
+        body: {
+          name: formData.name,
+          email: formData.email,
+          message: formData.message
+        }
+      });
 
       if (error) {
         throw error;
+      }
+
+      if (data.error) {
+        throw new Error(data.error);
       }
 
       toast({
