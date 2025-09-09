@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -85,45 +84,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log('Contact form submission saved:', data);
-
-    // Send email notification via NameCheap SMTP
-    try {
-      const client = new SMTPClient({
-        connection: {
-          hostname: Deno.env.get('NAMECHEAP_SMTP_HOST') ?? 'mail.privateemail.com',
-          port: parseInt(Deno.env.get('NAMECHEAP_SMTP_PORT') ?? '587'),
-          tls: true,
-          auth: {
-            username: Deno.env.get('NAMECHEAP_SMTP_USERNAME') ?? '',
-            password: Deno.env.get('NAMECHEAP_SMTP_PASSWORD') ?? '',
-          },
-        },
-      });
-
-      await client.send({
-        from: "info@smarttechanalytics.com",
-        to: "info@smarttechanalytics.com",
-        subject: `New Contact Form Submission from ${name}`,
-        content: `
-          <h2>New Contact Form Submission</h2>
-          <p><strong>Name:</strong> ${name}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Message:</strong></p>
-          <p>${message.replace(/\n/g, '<br>')}</p>
-          <hr>
-          <p><small>Submission ID: ${data.id}</small></p>
-          <p><small>Submitted at: ${new Date().toISOString()}</small></p>
-        `,
-        html: true,
-      });
-
-      await client.close();
-      console.log('Email notification sent successfully');
-
-    } catch (emailError: any) {
-      console.error('Failed to send email notification:', emailError);
-      // Don't fail the request if email fails, as data is already saved
-    }
 
     return new Response(
       JSON.stringify({ 
