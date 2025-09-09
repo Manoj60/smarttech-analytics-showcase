@@ -112,7 +112,7 @@ const handler = async (req: Request): Promise<Response> => {
       // Send notification email to team
       console.log('Sending notification email to: info@smarttechanalytics.com');
       const teamEmailResponse = await resend.emails.send({
-        from: 'Smart Tech Analytics <info@smarttechanalytics.com>',
+        from: email,
         to: ['info@smarttechanalytics.com'],
         subject: `New Contact Form Submission from ${name}`,
         html: `
