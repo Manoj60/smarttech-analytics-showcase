@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -84,6 +85,52 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     console.log('Contact form submission saved:', data);
+
+    // Send emails using Resend
+    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+    
+    try {
+      // Send confirmation email to user
+      await resend.emails.send({
+        from: 'Smart Tech Analytics <info@smarttechanalytics.com>',
+        to: [email],
+        subject: 'Thank you for contacting Smart Tech Analytics',
+        html: `
+          <h2>Thank you for your message!</h2>
+          <p>Hi ${name},</p>
+          <p>We've received your message and will get back to you as soon as possible.</p>
+          <div style="background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px;">
+            <h3>Your message:</h3>
+            <p>${message.replace(/\n/g, '<br>')}</p>
+          </div>
+          <p>Best regards,<br>Smart Tech Analytics Team</p>
+        `,
+      });
+
+      // Send notification email to team
+      await resend.emails.send({
+        from: 'Smart Tech Analytics <info@smarttechanalytics.com>',
+        to: ['info@smarttechanalytics.com'],
+        subject: `New Contact Form Submission from ${name}`,
+        html: `
+          <h2>New Contact Form Submission</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Message:</strong></p>
+          <div style="background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px;">
+            <p>${message.replace(/\n/g, '<br>')}</p>
+          </div>
+          <hr>
+          <p><small>Submission ID: ${data.id}</small></p>
+          <p><small>Submitted at: ${new Date().toISOString()}</small></p>
+        `,
+      });
+
+      console.log('Emails sent successfully');
+    } catch (emailError: any) {
+      console.error('Failed to send emails:', emailError);
+      // Don't fail the request if email fails, as data is already saved
+    }
 
     return new Response(
       JSON.stringify({ 

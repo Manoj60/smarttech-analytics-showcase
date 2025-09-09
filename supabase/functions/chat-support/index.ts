@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { Resend } from "npm:resend@2.0.0";
 
 // Tighter CORS - replace '*' with your actual domain in production  
 const corsHeaders = {
@@ -163,6 +164,31 @@ serve(async (req) => {
     if (userMessageError) {
       console.error('Error storing user message:', userMessageError);
       throw new Error('Failed to store user message');
+    }
+
+    // Send notification email for new chat message
+    try {
+      const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+      await resend.emails.send({
+        from: 'Smart Tech Analytics <info@smarttechanalytics.com>',
+        to: ['info@smarttechanalytics.com'],
+        subject: `New Chat Message from ${userName}`,
+        html: `
+          <h2>New Chat Support Message</h2>
+          <p><strong>Name:</strong> ${userName}</p>
+          <p><strong>Email:</strong> ${userEmail}</p>
+          <p><strong>Conversation ID:</strong> ${currentConversationId}</p>
+          <p><strong>Message:</strong></p>
+          <div style="background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px;">
+            <p>${message.replace(/\n/g, '<br>')}</p>
+          </div>
+          <p><small>Received at: ${new Date().toISOString()}</small></p>
+        `,
+      });
+      console.log('Chat notification email sent successfully');
+    } catch (emailError: any) {
+      console.error('Failed to send chat notification email:', emailError);
+      // Don't fail the request if email fails
     }
 
     // Get conversation history
