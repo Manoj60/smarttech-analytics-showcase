@@ -91,7 +91,8 @@ const handler = async (req: Request): Promise<Response> => {
     
     try {
       // Send confirmation email to user
-      await resend.emails.send({
+      console.log(`Sending confirmation email to user: ${email}`);
+      const userEmailResponse = await resend.emails.send({
         from: 'Smart Tech Analytics <info@smarttechanalytics.com>',
         to: [email],
         subject: 'Thank you for contacting Smart Tech Analytics',
@@ -106,9 +107,11 @@ const handler = async (req: Request): Promise<Response> => {
           <p>Best regards,<br>Smart Tech Analytics Team</p>
         `,
       });
+      console.log('User confirmation email sent:', userEmailResponse);
 
       // Send notification email to team
-      await resend.emails.send({
+      console.log('Sending notification email to: info@smarttechanalytics.com');
+      const teamEmailResponse = await resend.emails.send({
         from: 'Smart Tech Analytics <info@smarttechanalytics.com>',
         to: ['info@smarttechanalytics.com'],
         subject: `New Contact Form Submission from ${name}`,
@@ -125,10 +128,12 @@ const handler = async (req: Request): Promise<Response> => {
           <p><small>Submitted at: ${new Date().toISOString()}</small></p>
         `,
       });
+      console.log('Team notification email sent:', teamEmailResponse);
 
-      console.log('Emails sent successfully');
+      console.log('Both emails sent successfully');
     } catch (emailError: any) {
       console.error('Failed to send emails:', emailError);
+      console.error('Email error details:', JSON.stringify(emailError, null, 2));
       // Don't fail the request if email fails, as data is already saved
     }
 
