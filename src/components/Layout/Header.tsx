@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut, Settings } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, isAdmin, signOut } = useAuth();
 
   const navItems = [
     { name: 'Home', href: '/' },
@@ -47,9 +49,28 @@ const Header = () => {
                 {item.name}
               </Link>
             ))}
-            <Button variant="default" size="sm" asChild>
-              <Link to="/contact">Get Started</Link>
-            </Button>
+            {user ? (
+              <div className="flex items-center gap-2">
+                {isAdmin() && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to="/admin">Admin Dashboard</Link>
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={signOut}>
+                  <LogOut className="h-4 w-4 mr-1" />
+                  Sign Out
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" asChild>
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+                <Button variant="default" size="sm" asChild>
+                  <Link to="/contact">Get Started</Link>
+                </Button>
+              </div>
+            )}
           </nav>
 
           {/* Mobile menu button */}
@@ -80,11 +101,37 @@ const Header = () => {
                   {item.name}
                 </Link>
               ))}
-              <Button variant="default" size="sm" className="w-fit" asChild>
-                <Link to="/contact" onClick={() => setIsMenuOpen(false)}>
-                  Get Started
-                </Link>
-              </Button>
+              {user ? (
+                <div className="flex flex-col gap-2">
+                  {isAdmin() && (
+                    <Button variant="outline" size="sm" className="w-fit" asChild>
+                      <Link to="/admin" onClick={() => setIsMenuOpen(false)}>
+                        Admin Dashboard
+                      </Link>
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm" className="w-fit" onClick={() => {
+                    setIsMenuOpen(false);
+                    signOut();
+                  }}>
+                    <LogOut className="h-4 w-4 mr-1" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2">
+                  <Button variant="outline" size="sm" className="w-fit" asChild>
+                    <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                      Sign In
+                    </Link>
+                  </Button>
+                  <Button variant="default" size="sm" className="w-fit" asChild>
+                    <Link to="/contact" onClick={() => setIsMenuOpen(false)}>
+                      Get Started
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </nav>
           </div>
         )}
