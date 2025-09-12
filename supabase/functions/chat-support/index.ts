@@ -62,12 +62,12 @@ serve(async (req) => {
       });
     }
     
-    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-    if (!OPENAI_API_KEY) {
-      throw new Error('OPENAI_API_KEY is not set');
+    if (!DEEPSEEK_API_KEY) {
+      throw new Error('DEEPSEEK_API_KEY is not set');
     }
 
     // Initialize Supabase client
@@ -231,24 +231,25 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
       }))
     ];
 
-    // Call OpenAI API with latest GPT-5 model
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Call DeepSeek API
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini-2025-08-07',
+        model: 'deepseek-chat',
         messages: messages,
-        max_completion_tokens: 500,
+        max_tokens: 500,
+        temperature: 0.7,
       }),
     });
 
     const aiData = await response.json();
     
     if (!response.ok) {
-      console.error('OpenAI API error:', aiData);
+      console.error('DeepSeek API error:', aiData);
       throw new Error('Failed to get AI response');
     }
 
