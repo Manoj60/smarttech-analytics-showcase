@@ -119,6 +119,110 @@ export type Database = {
         }
         Relationships: []
       }
+      job_applications: {
+        Row: {
+          cover_letter: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          job_id: string
+          linkedin_profile: string | null
+          phone: string
+          portfolio_website: string | null
+          resume_file_name: string
+          resume_file_path: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cover_letter?: string | null
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          job_id: string
+          linkedin_profile?: string | null
+          phone: string
+          portfolio_website?: string | null
+          resume_file_name: string
+          resume_file_path: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cover_letter?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          job_id?: string
+          linkedin_profile?: string | null
+          phone?: string
+          portfolio_website?: string | null
+          resume_file_name?: string
+          resume_file_path?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jobs: {
+        Row: {
+          created_at: string
+          department: string
+          description: string
+          employment_type: string
+          experience_level: string
+          id: string
+          is_active: boolean
+          location: string
+          qualifications: string[]
+          responsibilities: string[]
+          salary_range: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          department: string
+          description: string
+          employment_type: string
+          experience_level: string
+          id?: string
+          is_active?: boolean
+          location: string
+          qualifications?: string[]
+          responsibilities?: string[]
+          salary_range?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          department?: string
+          description?: string
+          employment_type?: string
+          experience_level?: string
+          id?: string
+          is_active?: boolean
+          location?: string
+          qualifications?: string[]
+          responsibilities?: string[]
+          salary_range?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string

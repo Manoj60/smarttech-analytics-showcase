@@ -25,3 +25,6 @@ verify_jwt = false
 
 [functions.chat-support]
 verify_jwt = false
+
+[functions.submit-application]
+verify_jwt = false
