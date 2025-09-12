@@ -424,7 +424,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
       ) : (
         <Card className="w-96 h-[500px] shadow-xl border-0 bg-background">
           <CardHeader className="flex flex-row items-center justify-between p-4 bg-primary text-white">
-            <CardTitle className="text-lg font-semibold">Smart Tech Analytics Virtual Assistant</CardTitle>
+            <CardTitle className="text-lg font-semibold">Chat Support</CardTitle>
             <Button
               onClick={handleCloseClick}
               variant="ghost"
@@ -483,9 +483,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
                 </ScrollArea>
                 
                 <div className="p-4 border-t space-y-3">
-                  {/* Role-based access indicator */}
-                  <RoleBasedAccess userRole={userRole} userEmail={userInfo.email} />
-                  
                   {/* Threading controls - only for non-guest users */}
                   {canUseThreading(userRole) && (
                     <ThreadManager
