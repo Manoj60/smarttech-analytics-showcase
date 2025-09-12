@@ -40,7 +40,17 @@ serve(async (req) => {
       });
     }
 
-    const { message, conversationId, conversationSecret, userName, userEmail, action = 'send' } = await req.json();
+    const { 
+      message, 
+      conversationId, 
+      conversationSecret, 
+      userName, 
+      userEmail, 
+      userRole = 'guest',
+      threadId,
+      threadName,
+      action = 'send' 
+    } = await req.json();
     console.log('Received request:', { action, userName, userEmail, messageLength: message?.length || 0 });
     
     // Input validation for send action
@@ -96,11 +106,20 @@ serve(async (req) => {
         throw new Error('Invalid conversation access');
       }
 
-      // Get messages for this conversation
-      const { data: messages, error: messagesError } = await supabase
+      // Get messages for this conversation with thread info
+      let messagesQuery = supabase
         .from('messages')
-        .select('id, content, role, created_at')
-        .eq('conversation_id', conversationId)
+        .select('id, content, role, created_at, thread_id')
+        .eq('conversation_id', conversationId);
+
+      // Filter by thread if specified
+      if (threadId) {
+        messagesQuery = messagesQuery.eq('thread_id', threadId);
+      } else {
+        messagesQuery = messagesQuery.is('thread_id', null);
+      }
+
+      const { data: messages, error: messagesError } = await messagesQuery
         .order('created_at', { ascending: true });
 
       if (messagesError) {
@@ -108,7 +127,91 @@ serve(async (req) => {
         throw new Error('Failed to fetch messages');
       }
 
-      return new Response(JSON.stringify({ messages: messages || [] }), {
+      // Get available threads for this conversation
+      const { data: threads } = await supabase
+        .from('conversation_threads')
+        .select('id, thread_name, created_by, created_at, is_active')
+        .eq('conversation_id', conversationId)
+        .eq('is_active', true)
+        .order('created_at', { ascending: true });
+
+      return new Response(JSON.stringify({ 
+        messages: messages || [], 
+        threads: threads || [] 
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Handle thread management actions
+    if (action === 'create_thread') {
+      if (!conversationId || !conversationSecret || !threadName) {
+        throw new Error('Missing required parameters for thread creation');
+      }
+
+      // Verify conversation access
+      const { data: conversation } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .eq('conversation_secret', conversationSecret)
+        .maybeSingle();
+
+      if (!conversation) {
+        throw new Error('Invalid conversation access');
+      }
+
+      // Create new thread
+      const { data: newThread, error: threadError } = await supabase
+        .from('conversation_threads')
+        .insert({
+          conversation_id: conversationId,
+          thread_name: threadName,
+          created_by: userName || 'Anonymous'
+        })
+        .select()
+        .single();
+
+      if (threadError) {
+        console.error('Error creating thread:', threadError);
+        throw new Error('Failed to create thread');
+      }
+
+      return new Response(JSON.stringify({ thread: newThread }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (action === 'close_thread') {
+      if (!conversationId || !conversationSecret || !threadId) {
+        throw new Error('Missing required parameters for thread closure');
+      }
+
+      // Verify conversation access
+      const { data: conversation } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('id', conversationId)
+        .eq('conversation_secret', conversationSecret)
+        .maybeSingle();
+
+      if (!conversation) {
+        throw new Error('Invalid conversation access');
+      }
+
+      // Close thread
+      const { error: closeError } = await supabase
+        .from('conversation_threads')
+        .update({ is_active: false })
+        .eq('id', threadId)
+        .eq('conversation_id', conversationId);
+
+      if (closeError) {
+        console.error('Error closing thread:', closeError);
+        throw new Error('Failed to close thread');
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -131,7 +234,10 @@ serve(async (req) => {
           user_name: userName,
           user_email: userEmail,
           status: 'active',
-          conversation_secret: newSecret
+          conversation_secret: newSecret,
+          user_role: userRole,
+          last_activity_at: new Date().toISOString(),
+          timeout_at: new Date(Date.now() + getTimeoutMinutes(userRole) * 60 * 1000).toISOString()
         })
         .select()
         .single();
@@ -163,7 +269,8 @@ serve(async (req) => {
       .insert({
         conversation_id: currentConversationId,
         content: message,
-        role: 'user'
+        role: 'user',
+        thread_id: threadId || null
       });
 
     if (userMessageError) {
@@ -289,7 +396,8 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
       .insert({
         conversation_id: currentConversationId,
         content: aiMessage,
-        role: 'assistant'
+        role: 'assistant',
+        thread_id: threadId || null
       });
 
     if (aiMessageError) {
@@ -382,4 +490,17 @@ async function checkRateLimit(ip: string, functionName: string): Promise<{ allow
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+// Get timeout duration based on user role
+function getTimeoutMinutes(userRole: string): number {
+  switch (userRole) {
+    case 'admin':
+    case 'premium':
+      return 60; // 60 minutes
+    case 'user':
+      return 30; // 30 minutes
+    default:
+      return 15; // 15 minutes for guests
+  }
 }

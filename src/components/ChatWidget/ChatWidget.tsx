@@ -4,18 +4,38 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { MessageCircle, X, Send, User, Bot } from 'lucide-react';
+import { MessageCircle, X, Send, User, Bot, Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import ChatUserForm from './ChatUserForm';
 import TypingIndicator from './TypingIndicator';
+import ConversationExporter from './ConversationExporter';
+import ThreadManager from './ThreadManager';
+import RoleBasedAccess, { 
+  canUseThreading, 
+  canExportConversations, 
+  getConversationTimeout, 
+  getMessageLimit 
+} from './RoleBasedAccess';
 
 interface Message {
   id: string;
   content: string;
   role: 'user' | 'assistant';
   created_at: string;
+  thread_id?: string;
 }
+
+interface Thread {
+  id: string;
+  thread_name: string;
+  created_by: string;
+  created_at: string;
+  is_active: boolean;
+}
+
+type UserRole = 'guest' | 'user' | 'premium' | 'admin';
 
 interface ChatWidgetProps {
   className?: string;
@@ -23,6 +43,7 @@ interface ChatWidgetProps {
 
 const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
   const { toast } = useToast();
+  const { user, userProfile } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<{ name: string; email: string } | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -33,6 +54,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
   const [isSending, setIsSending] = useState(false);
   const [showCloseDialog, setShowCloseDialog] = useState(false);
   const [inactivityTimer, setInactivityTimer] = useState<NodeJS.Timeout | null>(null);
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>('guest');
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -43,11 +68,20 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
     scrollToBottom();
   }, [messages]);
 
+  // Determine user role based on authentication
+  useEffect(() => {
+    if (user && userProfile) {
+      setUserRole(userProfile.role as UserRole);
+    } else {
+      setUserRole('guest');
+    }
+  }, [user, userProfile]);
+
   useEffect(() => {
     if (conversationId && conversationSecret) {
       loadMessageHistory();
     }
-  }, [conversationId, conversationSecret]);
+  }, [conversationId, conversationSecret, currentThreadId]);
 
   const loadMessageHistory = async () => {
     if (!conversationId || !conversationSecret) return;
@@ -57,7 +91,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
         body: {
           action: 'history',
           conversationId: conversationId,
-          conversationSecret: conversationSecret
+          conversationSecret: conversationSecret,
+          threadId: currentThreadId
         }
       });
 
@@ -76,8 +111,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
         id: msg.id,
         content: msg.content,
         role: msg.role as 'user' | 'assistant',
-        created_at: msg.created_at
+        created_at: msg.created_at,
+        thread_id: msg.thread_id
       })));
+
+      if (response.threads) {
+        setThreads(response.threads);
+      }
     } catch (error) {
       console.error('Error loading message history:', error);
     }
@@ -103,9 +143,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
     }
     
     if (userInfo && isOpen) {
+      const timeoutMinutes = getConversationTimeout(userRole);
       const timer = setTimeout(() => {
         handleAutoClose();
-      }, 2 * 60 * 1000); // 2 minutes
+      }, timeoutMinutes * 60 * 1000);
       
       setInactivityTimer(timer);
     }
@@ -114,6 +155,17 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
   const sendMessage = async () => {
     if (!currentMessage.trim() || !userInfo || isSending) return;
 
+    // Check message limit for user role
+    const messageLimit = getMessageLimit(userRole);
+    if (messageLimit > 0 && messages.length >= messageLimit) {
+      toast({
+        title: "Message Limit Reached",
+        description: `${userRole} users can send up to ${messageLimit} messages. Please upgrade for unlimited access.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     // Reset inactivity timer on message send
     resetInactivityTimer();
 
@@ -121,7 +173,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
       id: `temp-${Date.now()}`,
       content: currentMessage,
       role: 'user',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
+      thread_id: currentThreadId || undefined
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -137,6 +190,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
           conversationSecret: conversationSecret,
           userName: userInfo.name,
           userEmail: userInfo.email,
+          userRole: userRole,
+          threadId: currentThreadId,
           action: 'send'
         }
       });
@@ -251,6 +306,61 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
     setIsOpen(false);
   };
 
+  // Thread management functions
+  const createThread = async (threadName: string) => {
+    if (!conversationId || !conversationSecret || !userInfo) {
+      throw new Error('No active conversation');
+    }
+
+    const { data, error } = await supabase.functions.invoke('chat-support', {
+      body: {
+        action: 'create_thread',
+        conversationId: conversationId,
+        conversationSecret: conversationSecret,
+        threadName: threadName,
+        userName: userInfo.name
+      }
+    });
+
+    if (error) throw error;
+    if (data.error) throw new Error(data.error);
+
+    // Reload message history to get updated threads
+    await loadMessageHistory();
+    setCurrentThreadId(data.thread.id);
+  };
+
+  const selectThread = (threadId: string | null) => {
+    setCurrentThreadId(threadId);
+    // This will trigger loadMessageHistory via useEffect
+  };
+
+  const closeThread = async (threadId: string) => {
+    if (!conversationId || !conversationSecret) {
+      throw new Error('No active conversation');
+    }
+
+    const { data, error } = await supabase.functions.invoke('chat-support', {
+      body: {
+        action: 'close_thread',
+        conversationId: conversationId,
+        conversationSecret: conversationSecret,
+        threadId: threadId
+      }
+    });
+
+    if (error) throw error;
+    if (data.error) throw new Error(data.error);
+
+    // If we're currently in the closed thread, switch to main conversation
+    if (currentThreadId === threadId) {
+      setCurrentThreadId(null);
+    }
+
+    // Reload message history to get updated threads
+    await loadMessageHistory();
+  };
+
   const resetChat = () => {
     // Clear inactivity timer
     if (inactivityTimer) {
@@ -265,6 +375,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
     setCurrentMessage('');
     setIsTyping(false);
     setIsSending(false);
+    setThreads([]);
+    setCurrentThreadId(null);
+    setShowAdvancedOptions(false);
     
     // Clear localStorage
     localStorage.removeItem('chatConversationId');
@@ -369,7 +482,23 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
                   </div>
                 </ScrollArea>
                 
-                <div className="p-4 border-t">
+                <div className="p-4 border-t space-y-3">
+                  {/* Role-based access indicator */}
+                  <RoleBasedAccess userRole={userRole} userEmail={userInfo.email} />
+                  
+                  {/* Threading controls - only for non-guest users */}
+                  {canUseThreading(userRole) && (
+                    <ThreadManager
+                      threads={threads}
+                      currentThreadId={currentThreadId}
+                      onCreateThread={createThread}
+                      onSelectThread={selectThread}
+                      onCloseThread={closeThread}
+                      userName={userInfo.name}
+                      disabled={isSending}
+                    />
+                  )}
+
                   <div className="flex gap-2">
                     <Input
                       value={currentMessage}
@@ -387,10 +516,21 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
                       <Send className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div className="flex justify-between items-center mt-2">
-                    <p className="text-xs text-muted-foreground">
-                      Chatting as {userInfo.name}
-                    </p>
+                  
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground">
+                        {userInfo.name} ({userRole})
+                      </p>
+                      <Button
+                        onClick={() => setShowAdvancedOptions(!showAdvancedOptions)}
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 w-5 p-0"
+                      >
+                        <Settings className="h-3 w-3" />
+                      </Button>
+                    </div>
                     <Button
                       onClick={resetChat}
                       variant="ghost"
@@ -400,6 +540,25 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
                       Start New Chat
                     </Button>
                   </div>
+
+                  {/* Advanced options panel */}
+                  {showAdvancedOptions && (
+                    <div className="border-t pt-2 space-y-2">
+                      {canExportConversations(userRole) && conversationId && (
+                        <ConversationExporter
+                          messages={messages}
+                          userName={userInfo.name}
+                          userEmail={userInfo.email}
+                          conversationId={conversationId}
+                        />
+                      )}
+                      {!canExportConversations(userRole) && (
+                        <p className="text-xs text-muted-foreground">
+                          Export features available for registered users
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               </>
             )}
