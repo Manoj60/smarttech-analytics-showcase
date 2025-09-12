@@ -238,18 +238,24 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
 
     // Call DeepSeek API
     console.log('Calling DeepSeek API with model: deepseek-chat');
+    console.log('API endpoint: https://api.deepseek.com/chat/completions');
+    console.log('Message count:', messages.length);
+    
+    const requestBody = {
+      model: 'deepseek-chat',
+      messages: messages,
+      max_tokens: 500,
+      temperature: 0.7,
+    };
+    console.log('Request body:', JSON.stringify(requestBody, null, 2));
+    
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: messages,
-        max_tokens: 500,
-        temperature: 0.7,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     const aiData = await response.json();
