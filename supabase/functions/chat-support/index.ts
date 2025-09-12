@@ -231,7 +231,7 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
       }))
     ];
 
-    // Call OpenAI API
+    // Call OpenAI API with latest GPT-5 model
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -239,10 +239,9 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini-2025-08-07',
         messages: messages,
-        max_tokens: 500,
-        temperature: 0.7,
+        max_completion_tokens: 500,
       }),
     });
 
