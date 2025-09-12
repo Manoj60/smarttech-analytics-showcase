@@ -264,7 +264,20 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
     
     if (!response.ok) {
       console.error('DeepSeek API error:', aiData);
-      throw new Error('Failed to get AI response');
+      let errorMessage = 'Failed to get AI response';
+      
+      // Handle specific DeepSeek error codes
+      if (response.status === 401) {
+        errorMessage = 'DeepSeek API authentication failed. Please check your API key.';
+      } else if (response.status === 402) {
+        errorMessage = 'DeepSeek API: Insufficient balance. Please add funds to your account.';
+      } else if (response.status === 429) {
+        errorMessage = 'DeepSeek API: Rate limit reached. Please try again later.';
+      } else if (response.status >= 500) {
+        errorMessage = 'DeepSeek API server error. Please try again later.';
+      }
+      
+      throw new Error(errorMessage);
     }
 
     const aiMessage = aiData.choices[0].message.content;
