@@ -24,7 +24,9 @@ serve(async (req) => {
 
   try {
     const clientIP = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-    console.log(`Chat request from IP: ${clientIP.substring(0, 10)}...`); // Log partial IP for privacy
+    console.log(`Chat request from IP: ${clientIP.substring(0, 10)}...`);
+    console.log('Request method:', req.method);
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
     
     // Rate limiting check
     const rateLimitResult = await checkRateLimit(clientIP, 'chat-support');
@@ -39,6 +41,7 @@ serve(async (req) => {
     }
 
     const { message, conversationId, conversationSecret, userName, userEmail, action = 'send' } = await req.json();
+    console.log('Received request:', { action, userName, userEmail, messageLength: message?.length || 0 });
     
     // Input validation for send action
     if (action !== 'history' && (!message || typeof message !== 'string' || message.trim().length === 0)) {
@@ -67,8 +70,10 @@ serve(async (req) => {
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     if (!DEEPSEEK_API_KEY) {
+      console.error('DEEPSEEK_API_KEY is not set in environment variables');
       throw new Error('DEEPSEEK_API_KEY is not set');
     }
+    console.log('DeepSeek API key is configured');
 
     // Initialize Supabase client
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
@@ -232,6 +237,7 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
     ];
 
     // Call DeepSeek API
+    console.log('Calling DeepSeek API with model: deepseek-chat');
     const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
@@ -247,6 +253,8 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
     });
 
     const aiData = await response.json();
+    console.log('DeepSeek API response status:', response.status);
+    console.log('DeepSeek API response data:', aiData);
     
     if (!response.ok) {
       console.error('DeepSeek API error:', aiData);
@@ -254,6 +262,7 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
     }
 
     const aiMessage = aiData.choices[0].message.content;
+    console.log('AI response generated successfully, length:', aiMessage.length);
 
     // Store AI response
     const { error: aiMessageError } = await supabase
