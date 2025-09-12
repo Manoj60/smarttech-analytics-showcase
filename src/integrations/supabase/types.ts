@@ -14,33 +14,83 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_threads: {
+        Row: {
+          conversation_id: string
+          created_at: string
+          created_by: string
+          id: string
+          is_active: boolean | null
+          thread_name: string
+        }
+        Insert: {
+          conversation_id: string
+          created_at?: string
+          created_by: string
+          id?: string
+          is_active?: boolean | null
+          thread_name: string
+        }
+        Update: {
+          conversation_id?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_active?: boolean | null
+          thread_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_threads_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           conversation_secret: string | null
           created_at: string
           id: string
+          is_threaded: boolean | null
+          last_activity_at: string | null
           status: string
+          thread_id: string | null
+          timeout_at: string | null
           updated_at: string
           user_email: string
           user_name: string
+          user_role: string | null
         }
         Insert: {
           conversation_secret?: string | null
           created_at?: string
           id?: string
+          is_threaded?: boolean | null
+          last_activity_at?: string | null
           status?: string
+          thread_id?: string | null
+          timeout_at?: string | null
           updated_at?: string
           user_email: string
           user_name: string
+          user_role?: string | null
         }
         Update: {
           conversation_secret?: string | null
           created_at?: string
           id?: string
+          is_threaded?: boolean | null
+          last_activity_at?: string | null
           status?: string
+          thread_id?: string | null
+          timeout_at?: string | null
           updated_at?: string
           user_email?: string
           user_name?: string
+          user_role?: string | null
         }
         Relationships: []
       }
@@ -244,6 +294,7 @@ export type Database = {
           created_at: string
           id: string
           role: string
+          thread_id: string | null
         }
         Insert: {
           content: string
@@ -251,6 +302,7 @@ export type Database = {
           created_at?: string
           id?: string
           role: string
+          thread_id?: string | null
         }
         Update: {
           content?: string
@@ -258,6 +310,7 @@ export type Database = {
           created_at?: string
           id?: string
           role?: string
+          thread_id?: string | null
         }
         Relationships: [
           {
@@ -265,6 +318,13 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "conversation_threads"
             referencedColumns: ["id"]
           },
         ]
@@ -304,6 +364,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_conversations: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       is_admin: {
         Args: { user_id_param: string }
         Returns: boolean
