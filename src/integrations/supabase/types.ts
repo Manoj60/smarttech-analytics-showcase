@@ -121,6 +121,7 @@ export type Database = {
       }
       job_applications: {
         Row: {
+          admin_notes: string | null
           cover_letter: string | null
           created_at: string
           email: string
@@ -136,6 +137,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          admin_notes?: string | null
           cover_letter?: string | null
           created_at?: string
           email: string
@@ -151,6 +153,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          admin_notes?: string | null
           cover_letter?: string | null
           created_at?: string
           email?: string
@@ -178,6 +181,7 @@ export type Database = {
       jobs: {
         Row: {
           created_at: string
+          created_by: string | null
           department: string
           description: string
           employment_type: string
@@ -193,6 +197,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          created_by?: string | null
           department: string
           description: string
           employment_type: string
@@ -208,6 +213,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          created_by?: string | null
           department?: string
           description?: string
           employment_type?: string
@@ -221,7 +227,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "jobs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       messages: {
         Row: {
@@ -255,11 +269,45 @@ export type Database = {
           },
         ]
       }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      is_admin: {
+        Args: { user_id_param: string }
+        Returns: boolean
+      }
       verify_conversation_access: {
         Args: {
           conversation_id_param: string
