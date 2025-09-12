@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MessageCircle, X, Send, User, Bot } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
@@ -30,6 +31,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
   const [conversationSecret, setConversationSecret] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
+  const [inactivityTimer, setInactivityTimer] = useState<NodeJS.Timeout | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -88,10 +91,31 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
       role: 'assistant',
       created_at: new Date().toISOString()
     }]);
+    
+    // Start inactivity timer when chat begins
+    resetInactivityTimer();
+  };
+
+  // Reset inactivity timer on user activity
+  const resetInactivityTimer = () => {
+    if (inactivityTimer) {
+      clearTimeout(inactivityTimer);
+    }
+    
+    if (userInfo && isOpen) {
+      const timer = setTimeout(() => {
+        handleAutoClose();
+      }, 2 * 60 * 1000); // 2 minutes
+      
+      setInactivityTimer(timer);
+    }
   };
 
   const sendMessage = async () => {
     if (!currentMessage.trim() || !userInfo || isSending) return;
+
+    // Reset inactivity timer on message send
+    resetInactivityTimer();
 
     const userMessage: Message = {
       id: `temp-${Date.now()}`,
@@ -170,7 +194,70 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
     }
   };
 
+  const sendTranscript = async (reason: 'manual_close' | 'timeout' | 'user_close') => {
+    if (!userInfo || messages.length === 0) return;
+
+    try {
+      await supabase.functions.invoke('send-chat-transcript', {
+        body: {
+          userName: userInfo.name,
+          userEmail: userInfo.email,
+          messages: messages,
+          reason: reason
+        }
+      });
+      
+      toast({
+        title: "Transcript Sent",
+        description: "A copy of your conversation has been sent to your email.",
+      });
+    } catch (error) {
+      console.error('Error sending transcript:', error);
+      toast({
+        title: "Warning",
+        description: "Chat ended but transcript could not be sent.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAutoClose = async () => {
+    await sendTranscript('timeout');
+    resetChat();
+    setIsOpen(false);
+    toast({
+      title: "Chat Timeout",
+      description: "Chat closed due to inactivity. Transcript sent to your email.",
+    });
+  };
+
+  const handleCloseClick = () => {
+    if (userInfo && messages.length > 1) { // More than just welcome message
+      setShowCloseDialog(true);
+    } else {
+      setIsOpen(false);
+    }
+  };
+
+  const handleContinueChat = () => {
+    setShowCloseDialog(false);
+    resetInactivityTimer();
+  };
+
+  const handleEndChat = async () => {
+    setShowCloseDialog(false);
+    await sendTranscript('user_close');
+    resetChat();
+    setIsOpen(false);
+  };
+
   const resetChat = () => {
+    // Clear inactivity timer
+    if (inactivityTimer) {
+      clearTimeout(inactivityTimer);
+      setInactivityTimer(null);
+    }
+    
     setUserInfo(null);
     setMessages([]);
     setConversationId(null);
@@ -195,6 +282,22 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
     }
   }, []);
 
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (inactivityTimer) {
+        clearTimeout(inactivityTimer);
+      }
+    };
+  }, [inactivityTimer]);
+
+  // Reset timer when user types
+  useEffect(() => {
+    if (currentMessage && userInfo) {
+      resetInactivityTimer();
+    }
+  }, [currentMessage]);
+
   return (
     <div className={`fixed bottom-4 right-4 z-50 ${className}`}>
       {!isOpen ? (
@@ -210,7 +313,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
           <CardHeader className="flex flex-row items-center justify-between p-4 bg-primary text-white">
             <CardTitle className="text-lg font-semibold">Smart Tech Analytics Virtual Assistant</CardTitle>
             <Button
-              onClick={() => setIsOpen(false)}
+              onClick={handleCloseClick}
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0 text-white hover:bg-white/10"
@@ -303,6 +406,27 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Close Confirmation Dialog */}
+      <Dialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>End Chat Session?</DialogTitle>
+            <DialogDescription>
+              Would you like to continue chatting or end this conversation? 
+              If you end the chat, a transcript will be sent to your email.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={handleContinueChat}>
+              Continue Chatting
+            </Button>
+            <Button onClick={handleEndChat}>
+              End & Send Transcript
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
