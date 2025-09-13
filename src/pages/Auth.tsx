@@ -1,27 +1,61 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { signIn, signUp, user, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Redirect authenticated users to home
-    if (user) {
-      navigate("/");
+    // Handle email confirmation tokens
+    const token_hash = searchParams.get('token_hash');
+    const type = searchParams.get('type');
+    
+    if (token_hash && type) {
+      supabase.auth.verifyOtp({
+        token_hash,
+        type: type as any,
+      }).then(({ data, error }) => {
+        if (error) {
+          console.error('Email confirmation error:', error);
+          toast({
+            title: "Confirmation Failed",
+            description: "Invalid or expired confirmation link.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Email Confirmed",
+            description: "Your email has been confirmed successfully. You can now sign in.",
+          });
+        }
+      });
     }
-  }, [user, navigate]);
+  }, [searchParams, toast]);
+
+  useEffect(() => {
+    // Redirect authenticated users
+    if (user) {
+      if (isAdmin()) {
+        navigate("/admin");
+      } else {
+        navigate("/");
+      }
+    }
+  }, [user, isAdmin, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -104,9 +104,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/auth`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -123,10 +123,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: error.message,
         variant: "destructive",
       });
+    } else if (data.user && !data.user.email_confirmed_at) {
+      toast({
+        title: "Success",
+        description: "Please check your email to confirm your account before signing in.",
+      });
     } else {
       toast({
         title: "Success",
-        description: "Please check your email to confirm your account.",
+        description: "Your account has been created successfully.",
       });
     }
     
