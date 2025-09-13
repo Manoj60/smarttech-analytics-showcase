@@ -543,8 +543,8 @@ async function searchRelevantContext(supabase: any, userMessage: string, userNam
       // Get available job listings
       const { data: activeJobs } = await supabase
         .from('jobs')
-        .select('title, department, job_type')
-        .eq('status', 'active')
+        .select('title, department, employment_type')
+        .eq('is_active', true)
         .limit(5);
       
       if (activeJobs && activeJobs.length > 0) {
@@ -552,13 +552,16 @@ async function searchRelevantContext(supabase: any, userMessage: string, userNam
       }
     }
     
-    // 3. Search previous conversations for context
-    const { data: recentMessages } = await supabase
-      .from('messages')
-      .select('content, role, created_at')
-      .eq('conversation_id', userMessage.includes('conversation') ? 'current' : 'none')
-      .order('created_at', { ascending: false })
-      .limit(5);
+    // 3. Contact information queries
+    const contactKeywords = ['contact', 'phone', 'email', 'address', 'office', 'reach', 'call', 'hours', 'location'];
+    if (contactKeywords.some(keyword => userMessage.toLowerCase().includes(keyword))) {
+      contextSources.push(`Website Contact Information: 
+        - Email: info@smarttechanalytics.com
+        - Phone: 657 216 0194
+        - Office Location: Boulder, Colorado, United States
+        - Business Hours: Monday-Friday 9:00 AM - 6:00 PM EST, Saturday 10:00 AM - 2:00 PM EST, Sunday Closed
+        - LinkedIn: https://www.linkedin.com/company/smarttechanalytics/?viewAsMember=true`);
+    }
     
     // 4. Website content context based on keywords
     const serviceKeywords = ['analytics', 'cloud', 'ai', 'machine learning', 'consulting', 'software development'];
