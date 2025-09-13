@@ -571,14 +571,20 @@ async function searchRelevantContext(supabase: any, userMessage: string, userNam
         - Background: Over 16 years of overall experience in IT and non-IT, leading high-caliber data domain & digital transformation initiatives at S&P 500 companies, author of two books, and published 15+ articles about business and technical aspects`);
     }
     
-    // 4. Website content context based on keywords
-    const serviceKeywords = ['analytics', 'cloud', 'ai', 'machine learning', 'consulting', 'software development'];
+    // 5. Website content context based on keywords
+    const serviceKeywords = ['service', 'services', 'analytics', 'cloud', 'ai', 'machine learning', 'consulting', 'software development', 'data', 'training', 'integration', 'migration', 'reporting', 'visualization'];
     const mentionedServices = serviceKeywords.filter(service => 
       userMessage.toLowerCase().includes(service)
     );
     
     if (mentionedServices.length > 0) {
-      contextSources.push(`Relevant Services: User asking about ${mentionedServices.join(', ')} - These are core Smart Tech Analytics offerings`);
+      contextSources.push(`Smart Tech Analytics Services:
+        1. Data Strategy & Governance - Data strategy development, governance framework, data quality management, compliance & risk assessment, data architecture planning
+        2. Cloud & Infrastructure Services - Cloud migration strategy, multi-cloud architecture, infrastructure optimization, DevOps implementation, performance monitoring
+        3. AI/ML Consulting - AI strategy & roadmap, machine learning model development, natural language processing, computer vision solutions, AI ethics & governance
+        4. Data Integration & Migration - ETL/ELT pipeline development, real-time data integration, legacy system migration, API development & management, data warehouse modernization
+        5. Enterprise Reporting & Visualization - Interactive dashboard development, executive reporting solutions, self-service analytics, mobile BI applications, embedded analytics
+        6. Learning Management & Training - NCLEX Prep & Placement (Healthcare), data analytics training programs, AI/ML certification courses, cloud platform training, custom curriculum development, corporate training solutions`);
     }
     
     // 5. Technical support context
