@@ -563,6 +563,14 @@ async function searchRelevantContext(supabase: any, userMessage: string, userNam
         - LinkedIn: https://www.linkedin.com/company/smarttechanalytics/?viewAsMember=true`);
     }
     
+    // 4. Leadership information queries
+    const leadershipKeywords = ['ceo', 'leader', 'leadership', 'founder', 'president', 'executive', 'who is', 'head'];
+    if (leadershipKeywords.some(keyword => userMessage.toLowerCase().includes(keyword))) {
+      contextSources.push(`Company Leadership: 
+        - CEO: Manoj Regmi, Chief Executive Officer
+        - Background: Over 16 years of overall experience in IT and non-IT, leading high-caliber data domain & digital transformation initiatives at S&P 500 companies, author of two books, and published 15+ articles about business and technical aspects`);
+    }
+    
     // 4. Website content context based on keywords
     const serviceKeywords = ['analytics', 'cloud', 'ai', 'machine learning', 'consulting', 'software development'];
     const mentionedServices = serviceKeywords.filter(service => 
