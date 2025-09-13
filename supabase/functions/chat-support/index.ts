@@ -315,7 +315,10 @@ serve(async (req) => {
       throw new Error('Failed to fetch message history');
     }
 
-    // Create system prompt with website context
+    // Search relevant context from website and database
+    const contextInfo = await searchRelevantContext(supabase, message, userName, userEmail);
+    
+    // Create enhanced system prompt with context integration
     const systemPrompt = `You are a helpful customer support assistant for Smart Tech Analytics, a company that provides advanced technology solutions and analytics services. 
 
 Our company specializes in:
@@ -324,6 +327,20 @@ Our company specializes in:
 - AI and machine learning services
 - Digital transformation consulting
 - Custom software development
+
+CONTEXT INTEGRATION INSTRUCTIONS:
+Before answering user questions, you have access to:
+1. Website content and documentation 
+2. Database records (user data, product info, transaction history)
+3. Previous conversation context
+
+When responding:
+- Synthesize information from all available sources
+- Provide comprehensive answers combining website content and database insights
+- Cite which sources informed your response when relevant
+- Always prioritize accuracy and completeness
+
+${contextInfo.length > 0 ? `\nRELEVANT CONTEXT FOR THIS QUERY:\n${contextInfo.join('\n')}\n` : ''}
 
 You should be friendly, professional, and knowledgeable about our services. Help customers with:
 - Product information and features
@@ -490,6 +507,81 @@ async function checkRateLimit(ip: string, functionName: string): Promise<{ allow
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+}
+
+// Search for relevant context from website content and database
+async function searchRelevantContext(supabase: any, userMessage: string, userName: string, userEmail: string): Promise<string[]> {
+  const contextSources: string[] = [];
+  
+  try {
+    // 1. Search for user-specific data in profiles
+    if (userEmail) {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('email', userEmail)
+        .maybeSingle();
+      
+      if (userProfile) {
+        contextSources.push(`User Profile: ${userName} (${userEmail}) - Role: ${userProfile.role || 'Standard'}, Account Status: ${userProfile.status || 'Active'}`);
+      }
+    }
+    
+    // 2. Search job applications if query relates to careers/jobs
+    const careerKeywords = ['job', 'career', 'application', 'position', 'hiring', 'employment', 'work'];
+    if (careerKeywords.some(keyword => userMessage.toLowerCase().includes(keyword))) {
+      const { data: applications } = await supabase
+        .from('job_applications')
+        .select('*, jobs(title, department)')
+        .eq('email', userEmail)
+        .limit(3);
+      
+      if (applications && applications.length > 0) {
+        contextSources.push(`Job Applications: User has ${applications.length} application(s) - Latest: ${applications[0].jobs?.title} in ${applications[0].jobs?.department}`);
+      }
+      
+      // Get available job listings
+      const { data: activeJobs } = await supabase
+        .from('jobs')
+        .select('title, department, job_type')
+        .eq('status', 'active')
+        .limit(5);
+      
+      if (activeJobs && activeJobs.length > 0) {
+        contextSources.push(`Available Positions: ${activeJobs.map(job => `${job.title} (${job.department})`).join(', ')}`);
+      }
+    }
+    
+    // 3. Search previous conversations for context
+    const { data: recentMessages } = await supabase
+      .from('messages')
+      .select('content, role, created_at')
+      .eq('conversation_id', userMessage.includes('conversation') ? 'current' : 'none')
+      .order('created_at', { ascending: false })
+      .limit(5);
+    
+    // 4. Website content context based on keywords
+    const serviceKeywords = ['analytics', 'cloud', 'ai', 'machine learning', 'consulting', 'software development'];
+    const mentionedServices = serviceKeywords.filter(service => 
+      userMessage.toLowerCase().includes(service)
+    );
+    
+    if (mentionedServices.length > 0) {
+      contextSources.push(`Relevant Services: User asking about ${mentionedServices.join(', ')} - These are core Smart Tech Analytics offerings`);
+    }
+    
+    // 5. Technical support context
+    const techKeywords = ['error', 'bug', 'issue', 'problem', 'not working', 'help', 'support'];
+    if (techKeywords.some(keyword => userMessage.toLowerCase().includes(keyword))) {
+      contextSources.push(`Technical Support: User reporting technical issue - Prioritize troubleshooting and solution-oriented responses`);
+    }
+    
+  } catch (error) {
+    console.error('Error searching context:', error);
+    contextSources.push('Context Search: Limited context available due to search error');
+  }
+  
+  return contextSources;
 }
 
 // Get timeout duration based on user role
