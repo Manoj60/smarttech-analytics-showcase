@@ -197,9 +197,15 @@ const handler = async (req: Request): Promise<Response> => {
       });
       console.log('Applicant confirmation email sent:', userEmailResponse);
 
-      // Send notification email to HR team
+      // Send notification email to HR team with resume attachment
       console.log('Sending notification email to: info@smarttechanalytics.com');
-      const teamEmailResponse = await resend.emails.send({
+      
+      // Get the resume file from storage for attachment
+      const { data: resumeData, error: downloadError } = await supabase.storage
+        .from("resumes")
+        .download(filePath);
+      
+      let emailOptions: any = {
         from: 'Smart Tech Analytics <no-reply@smarttechanalytics.com>',
         reply_to: email,
         to: ['info@smarttechanalytics.com'],
@@ -227,13 +233,33 @@ const handler = async (req: Request): Promise<Response> => {
             <p>${coverLetter.replace(/\n/g, '<br>')}</p>
           </div>
           ` : ''}
-          <p><strong>Resume:</strong> ${resumeFile.name} (stored as: ${filePath})</p>
+          <p><strong>Resume:</strong> ${resumeFile.name} (attached to this email)</p>
           <hr>
           <p><small>Application ID: ${application.id}</small></p>
           <p><small>Submitted at: ${new Date().toISOString()}</small></p>
-          <p>Please log into the admin panel to view the full application and download the resume.</p>
+          <p>The applicant's resume is attached to this email for your review.</p>
         `,
-      });
+      };
+
+      // Add resume attachment if download was successful
+      if (!downloadError && resumeData) {
+        console.log('Adding resume attachment to email');
+        const resumeBuffer = await resumeData.arrayBuffer();
+        const resumeBase64 = btoa(String.fromCharCode(...new Uint8Array(resumeBuffer)));
+        
+        emailOptions.attachments = [
+          {
+            filename: resumeFile.name,
+            content: resumeBase64,
+            type: resumeFile.type,
+          }
+        ];
+      } else {
+        console.error('Failed to download resume for attachment:', downloadError);
+        emailOptions.html += `<p style="color: red;"><em>Note: Resume attachment could not be included. Please access it from the admin panel.</em></p>`;
+      }
+
+      const teamEmailResponse = await resend.emails.send(emailOptions);
       console.log('HR team notification email sent:', teamEmailResponse);
 
       console.log('Both emails sent successfully');
