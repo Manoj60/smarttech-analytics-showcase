@@ -171,7 +171,6 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     // Send emails using Resend
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
     
     try {
       // Send confirmation email to applicant
