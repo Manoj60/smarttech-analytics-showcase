@@ -4,8 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Building, Clock, DollarSign, Calendar, Briefcase, Users } from "lucide-react";
+import { MapPin, Building, Clock, DollarSign, Calendar, Briefcase, Users, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ApplicationForm from "@/components/Careers/ApplicationForm";
+import JobForm from "@/components/Admin/JobForm";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 interface Job {
@@ -28,8 +31,10 @@ const Careers = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
+  const [showJobForm, setShowJobForm] = useState(false);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
     fetchJobs();
@@ -69,6 +74,10 @@ const Careers = () => {
       title: "Application Submitted",
       description: "Thank you for your application. We'll be in touch soon!",
     });
+  };
+
+  const refreshJobs = () => {
+    fetchJobs();
   };
 
   const formatDate = (dateString: string) => {
@@ -129,6 +138,40 @@ const Careers = () => {
             </div>
           </div>
         </section>
+
+        {/* Admin Controls - Only visible to admin users */}
+        {isAdmin() && (
+          <section className="py-8 border-b border-border">
+            <div className="container mx-auto px-4">
+              <div className="flex justify-center">
+                <Dialog open={showJobForm} onOpenChange={setShowJobForm}>
+                  <DialogTrigger asChild>
+                    <Button size="lg" className="gradient-primary shadow-elegant">
+                      <Plus className="h-5 w-5 mr-2" />
+                      Post New Job
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Create New Job Posting</DialogTitle>
+                    </DialogHeader>
+                    <JobForm
+                      onSubmit={() => {
+                        setShowJobForm(false);
+                        refreshJobs();
+                        toast({
+                          title: "Success",
+                          description: "Job posted successfully!",
+                        });
+                      }}
+                      onCancel={() => setShowJobForm(false)}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Job Listings Section */}
         <section className="py-20">
