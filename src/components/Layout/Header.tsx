@@ -60,17 +60,13 @@ const Header = () => {
               >
                 Contact
               </Link>
-              {!user ? (
+              {!user && (
                 <Link
                   to="/auth"
                   className="text-sm font-medium transition-smooth text-muted-foreground hover:text-foreground"
                 >
                   Sign In
                 </Link>
-              ) : (
-                <span className="text-sm font-medium text-muted-foreground/50 italic">
-                  [Sign In button location]
-                </span>
               )}
             </div>
             {user ? (
