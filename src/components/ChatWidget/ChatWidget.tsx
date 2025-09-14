@@ -441,16 +441,16 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
             ) : (
               <>
                 <ScrollArea className="flex-1 p-4">
-                  <div className="space-y-4">
+                  <div className="space-y-4 min-w-full">
                     {messages.map((message) => (
                       <div
                         key={message.id}
                         className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                       >
                         <div
-                          className={`flex max-w-[80%] ${
+                          className={`flex ${
                             message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
-                          } items-start gap-2`}
+                          } items-start gap-2 min-w-0`}
                         >
                           <div
                             className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
@@ -466,13 +466,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
                             )}
                           </div>
                           <div
-                            className={`px-3 py-2 rounded-lg ${
+                            className={`px-3 py-2 rounded-lg min-w-0 max-w-full overflow-x-auto ${
                               message.role === 'user'
                                 ? 'bg-primary text-white'
                                 : 'bg-muted text-foreground'
                             }`}
                           >
-                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                            <p className="text-sm whitespace-pre-wrap break-words">{message.content}</p>
                           </div>
                         </div>
                       </div>
