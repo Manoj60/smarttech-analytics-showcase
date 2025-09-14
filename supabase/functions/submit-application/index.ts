@@ -159,60 +159,79 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Send confirmation email to applicant
-    console.log('Sending confirmation email to:', email);
-    const confirmationEmailResponse = await resend.emails.send({
-      from: 'Smart Tech Analytics <info@smarttechanalytics.com>',
-      to: [email],
-      subject: 'Application Received - Smart Tech Analytics',
-      html: `
-        <h1>Thank you for your application, ${fullName}!</h1>
-        <p>We have received your application for the <strong>${job.title}</strong> position.</p>
-        <p><strong>Application Details:</strong></p>
-        <ul>
-          <li>Position: ${job.title}</li>
-          <li>Department: ${job.department}</li>
-          <li>Location: ${job.location}</li>
-          <li>Submitted: ${new Date().toLocaleDateString()}</li>
-        </ul>
-        <p>We will review your application and get back to you within 5-7 business days.</p>
-        <p>Best regards,<br>Smart Tech Analytics HR Team</p>
-      `,
-    });
+    // Send emails using Resend
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    
+    try {
+      // Send confirmation email to applicant
+      console.log('Sending confirmation email to applicant:', email);
+      const userEmailResponse = await resend.emails.send({
+        from: 'Smart Tech Analytics <info@smarttechanalytics.com>',
+        to: [email],
+        subject: 'Application Received - Smart Tech Analytics',
+        html: `
+          <h2>Thank you for your application!</h2>
+          <p>Hi ${fullName},</p>
+          <p>We've received your application for the <strong>${job.title}</strong> position and will review it carefully.</p>
+          <div style="background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px;">
+            <h3>Application Details:</h3>
+            <p><strong>Position:</strong> ${job.title}</p>
+            <p><strong>Department:</strong> ${job.department}</p>
+            <p><strong>Location:</strong> ${job.location}</p>
+            <p><strong>Experience Level:</strong> ${job.experience_level}</p>
+            <p><strong>Submitted:</strong> ${new Date().toLocaleDateString()}</p>
+          </div>
+          <p>We will review your application and get back to you within 5-7 business days.</p>
+          <p>Best regards,<br>Smart Tech Analytics HR Team</p>
+        `,
+      });
+      console.log('Applicant confirmation email sent:', userEmailResponse);
 
-    // Send notification email to HR team
-    console.log('Sending notification email to: info@smarttechanalytics.com');
-    const hrEmailResponse = await resend.emails.send({
-      from: email,
-      to: ['info@smarttechanalytics.com'],
-      subject: `New Job Application: ${job.title} - ${fullName}`,
-      html: `
-        <h1>New Job Application Received</h1>
-        <p><strong>Position:</strong> ${job.title}</p>
-        <p><strong>Applicant:</strong> ${fullName}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Phone:</strong> ${phone}</p>
-        <p><strong>Visa Status:</strong> ${visaStatus}</p>
-        <p><strong>Preferred Location:</strong> ${preferredLocation}</p>
-        ${linkedinProfile ? `<p><strong>LinkedIn:</strong> <a href="${linkedinProfile}">${linkedinProfile}</a></p>` : ''}
-        ${portfolioWebsite ? `<p><strong>Portfolio:</strong> <a href="${portfolioWebsite}">${portfolioWebsite}</a></p>` : ''}
-        <p><strong>Department:</strong> ${job.department}</p>
-        <p><strong>Location:</strong> ${job.location}</p>
-        <p><strong>Experience Level:</strong> ${job.experience_level}</p>
-        <p><strong>Submitted:</strong> ${new Date().toLocaleString()}</p>
-        ${coverLetter ? `
-        <div>
-          <h3>Cover Letter:</h3>
-          <p style="background: #f5f5f5; padding: 15px; border-radius: 5px;">${coverLetter}</p>
-        </div>
-        ` : ''}
-        <p><strong>Resume:</strong> ${resumeFile.name} (stored as: ${filePath})</p>
-        <p>Please log into the admin panel to view the full application and resume.</p>
-      `,
-    });
+      // Send notification email to HR team
+      console.log('Sending notification email to: info@smarttechanalytics.com');
+      const teamEmailResponse = await resend.emails.send({
+        from: 'Smart Tech Analytics <no-reply@smarttechanalytics.com>',
+        reply_to: email,
+        to: ['info@smarttechanalytics.com'],
+        subject: `New Job Application: ${job.title} - ${fullName}`,
+        html: `
+          <h2>New Job Application Received</h2>
+          <p><strong>Position:</strong> ${job.title}</p>
+          <p><strong>Applicant:</strong> ${fullName}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Phone:</strong> ${phone}</p>
+          <p><strong>Visa Status:</strong> ${visaStatus}</p>
+          <p><strong>Preferred Location:</strong> ${preferredLocation}</p>
+          ${linkedinProfile ? `<p><strong>LinkedIn:</strong> <a href="${linkedinProfile}">${linkedinProfile}</a></p>` : ''}
+          ${portfolioWebsite ? `<p><strong>Portfolio:</strong> <a href="${portfolioWebsite}">${portfolioWebsite}</a></p>` : ''}
+          <div style="background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px;">
+            <h3>Job Details:</h3>
+            <p><strong>Department:</strong> ${job.department}</p>
+            <p><strong>Location:</strong> ${job.location}</p>
+            <p><strong>Experience Level:</strong> ${job.experience_level}</p>
+            <p><strong>Employment Type:</strong> ${job.employment_type}</p>
+          </div>
+          ${coverLetter ? `
+          <div style="background: #f5f5f5; padding: 15px; margin: 20px 0; border-radius: 5px;">
+            <h3>Cover Letter:</h3>
+            <p>${coverLetter.replace(/\n/g, '<br>')}</p>
+          </div>
+          ` : ''}
+          <p><strong>Resume:</strong> ${resumeFile.name} (stored as: ${filePath})</p>
+          <hr>
+          <p><small>Application ID: ${application.id}</small></p>
+          <p><small>Submitted at: ${new Date().toISOString()}</small></p>
+          <p>Please log into the admin panel to view the full application and download the resume.</p>
+        `,
+      });
+      console.log('HR team notification email sent:', teamEmailResponse);
 
-    console.log("Confirmation email sent:", confirmationEmailResponse);
-    console.log("HR notification sent:", hrEmailResponse);
+      console.log('Both emails sent successfully');
+    } catch (emailError: any) {
+      console.error('Failed to send emails:', emailError);
+      console.error('Email error details:', JSON.stringify(emailError, null, 2));
+      // Don't fail the request if email fails, as data is already saved
+    }
 
     return new Response(
       JSON.stringify({
