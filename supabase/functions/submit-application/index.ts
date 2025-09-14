@@ -17,7 +17,7 @@ interface ApplicationRequest {
   linkedinProfile?: string;
   portfolioWebsite?: string;
   coverLetter?: string;
-  resume: string;
+  resumeFile: File;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -52,12 +52,29 @@ const handler = async (req: Request): Promise<Response> => {
     const linkedinProfile = formData.get("linkedinProfile") as string;
     const portfolioWebsite = formData.get("portfolioWebsite") as string;
     const coverLetter = formData.get("coverLetter") as string;
-    const resume = formData.get("resume") as string;
+    const resumeFile = formData.get("resumeFile") as File;
 
     // Validate required fields
-    if (!jobId || !fullName || !email || !phone || !visaStatus || !preferredLocation || !resume) {
+    if (!jobId || !fullName || !email || !phone || !visaStatus || !preferredLocation || !resumeFile) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
+    // Validate file type
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ];
+    
+    if (!allowedTypes.includes(resumeFile.type)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid file type. Only PDF, DOC, and DOCX files are allowed." }),
         {
           status: 400,
           headers: { "Content-Type": "application/json", ...corsHeaders },
@@ -82,6 +99,32 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Generate unique file name
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const fileExtension = resumeFile.name.split(".").pop();
+    const fileName = `${fullName.replace(/\s+/g, "_")}_${timestamp}.${fileExtension}`;
+    const filePath = `${jobId}/${fileName}`;
+
+    // Upload resume to storage
+    const resumeBuffer = await resumeFile.arrayBuffer();
+    const { error: uploadError } = await supabase.storage
+      .from("resumes")
+      .upload(filePath, resumeBuffer, {
+        contentType: resumeFile.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Resume upload error:", uploadError);
+      return new Response(
+        JSON.stringify({ error: "Failed to upload resume" }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     // Save application to database
     const { data: application, error: applicationError } = await supabase
       .from("job_applications")
@@ -95,14 +138,17 @@ const handler = async (req: Request): Promise<Response> => {
         linkedin_profile: linkedinProfile || null,
         portfolio_website: portfolioWebsite || null,
         cover_letter: coverLetter || null,
-        resume_file_name: resume,
-        resume_file_path: null,
+        resume_file_name: resumeFile.name,
+        resume_file_path: filePath,
       })
       .select()
       .single();
 
     if (applicationError) {
       console.error("Application save error:", applicationError);
+      
+      // Clean up uploaded file if database save failed
+      await supabase.storage.from("resumes").remove([filePath]);
       
       return new Response(
         JSON.stringify({ error: "Failed to save application" }),
@@ -160,11 +206,8 @@ const handler = async (req: Request): Promise<Response> => {
           <p style="background: #f5f5f5; padding: 15px; border-radius: 5px;">${coverLetter}</p>
         </div>
         ` : ''}
-        <div>
-          <h3>Resume:</h3>
-          <p style="background: #f5f5f5; padding: 15px; border-radius: 5px;">${resume}</p>
-        </div>
-        <p>Please log into the admin panel to view the full application.</p>
+        <p><strong>Resume:</strong> ${resumeFile.name} (stored as: ${filePath})</p>
+        <p>Please log into the admin panel to view the full application and resume.</p>
       `,
     });
 
