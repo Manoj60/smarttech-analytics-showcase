@@ -306,7 +306,7 @@ const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
                   <FormControl>
                     <div className="space-y-4">
                       {!selectedFile ? (
-                        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors">
+                        <div className="relative border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors">
                           <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
                           <div className="space-y-2">
                             <p className="text-sm font-medium">Upload your resume</p>
