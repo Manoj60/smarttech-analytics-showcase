@@ -36,7 +36,7 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => (
+            {navItems.slice(0, -1).map((item) => (
               <Link
                 key={item.name}
                 to={item.href}
@@ -49,6 +49,26 @@ const Header = () => {
                 {item.name}
               </Link>
             ))}
+            <div className="flex items-center space-x-8">
+              <Link
+                to="/contact"
+                className={`text-sm font-medium transition-smooth ${
+                  isActive('/contact')
+                    ? 'text-primary border-b-2 border-primary'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                Contact
+              </Link>
+              {!user && (
+                <Link
+                  to="/auth"
+                  className="text-sm font-medium transition-smooth text-muted-foreground hover:text-foreground"
+                >
+                  Sign In
+                </Link>
+              )}
+            </div>
             {user ? (
               <div className="flex items-center gap-2">
                 {isAdmin() && (
@@ -62,14 +82,9 @@ const Header = () => {
                 </Button>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" asChild>
-                  <Link to="/auth">Sign In</Link>
-                </Button>
-                <Button variant="default" size="sm" asChild>
-                  <Link to="/contact">Get Started</Link>
-                </Button>
-              </div>
+              <Button variant="default" size="sm" asChild>
+                <Link to="/contact">Get Started</Link>
+              </Button>
             )}
           </nav>
 
