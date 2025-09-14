@@ -26,13 +26,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Upload, X, FileText } from "lucide-react";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_FILE_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-];
-
 const applicationSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
@@ -44,17 +37,7 @@ const applicationSchema = z.object({
   linkedinProfile: z.string().url("Please enter a valid LinkedIn URL").min(1, "LinkedIn profile is required"),
   portfolioWebsite: z.string().url("Please enter a valid website URL").optional().or(z.literal("")),
   coverLetter: z.string().optional(),
-  resume: z
-    .instanceof(FileList)
-    .refine((files) => files?.length === 1, "Resume is required")
-    .refine(
-      (files) => files?.[0]?.size <= MAX_FILE_SIZE,
-      "File size must be less than 5MB"
-    )
-    .refine(
-      (files) => ACCEPTED_FILE_TYPES.includes(files?.[0]?.type),
-      "Only PDF, DOC, and DOCX files are accepted"
-    ),
+  resume: z.string().min(1, "Resume information is required"),
 });
 
 type ApplicationFormData = z.infer<typeof applicationSchema>;
@@ -74,7 +57,6 @@ interface ApplicationFormProps {
 
 const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
 
   const form = useForm<ApplicationFormData>({
@@ -88,24 +70,10 @@ const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
       linkedinProfile: "",
       portfolioWebsite: "",
       coverLetter: "",
+      resume: "",
     },
   });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      // Create a FileList for react-hook-form
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-      form.setValue("resume", dataTransfer.files);
-    }
-  };
-
-  const removeFile = () => {
-    setSelectedFile(null);
-    form.setValue("resume", new DataTransfer().files);
-  };
 
   const onFormSubmit = async (data: ApplicationFormData) => {
     setIsSubmitting(true);
@@ -121,7 +89,7 @@ const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
       formData.append("linkedinProfile", data.linkedinProfile || "");
       formData.append("portfolioWebsite", data.portfolioWebsite || "");
       formData.append("coverLetter", data.coverLetter || "");
-      formData.append("resumeFile", data.resume[0]);
+      formData.append("resume", data.resume);
 
       const { data: response, error } = await supabase.functions.invoke(
         "submit-application",
@@ -303,47 +271,11 @@ const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
                 <FormItem>
                   <FormLabel>Resume *</FormLabel>
                   <FormControl>
-                    <div className="space-y-4">
-                      {!selectedFile ? (
-                        <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors">
-                          <Upload className="h-10 w-10 text-muted-foreground mx-auto mb-4" />
-                          <div className="space-y-2">
-                            <p className="text-sm font-medium">Upload your resume</p>
-                            <p className="text-xs text-muted-foreground">
-                              PDF, DOC, or DOCX files only (max 5MB)
-                            </p>
-                          </div>
-                          <Input
-                            type="file"
-                            accept=".pdf,.doc,.docx"
-                            onChange={handleFileChange}
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                          />
-                        </div>
-                      ) : (
-                        <div className="border border-border rounded-lg p-4 bg-muted/50">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <FileText className="h-8 w-8 text-primary" />
-                              <div>
-                                <p className="font-medium text-sm">{selectedFile.name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                                </p>
-                              </div>
-                            </div>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={removeFile}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <Textarea 
+                      placeholder="Please provide your resume information, work experience, education, and skills..."
+                      className="min-h-[120px]"
+                      {...field} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
