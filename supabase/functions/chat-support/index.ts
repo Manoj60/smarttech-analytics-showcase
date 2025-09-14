@@ -54,7 +54,7 @@ serve(async (req) => {
     console.log('Received request:', { action, userName, userEmail, messageLength: message?.length || 0 });
     
     // Input validation for send action
-    if (action !== 'history' && (!message || typeof message !== 'string' || message.trim().length === 0)) {
+    if (action === 'send' && (!message || typeof message !== 'string' || message.trim().length === 0)) {
       return new Response(JSON.stringify({ error: 'Message cannot be empty' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
