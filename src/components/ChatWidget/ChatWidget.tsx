@@ -576,7 +576,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={handleContinueChat} className="font-body border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10">
+            <Button onClick={handleContinueChat} className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-body">
               Continue Chatting
             </Button>
             <Button onClick={handleEndChat} className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-body">
