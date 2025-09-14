@@ -422,7 +422,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
           <MessageCircle className="h-6 w-6 text-white" />
         </Button>
       ) : (
-        <Card className="w-96 h-[500px] shadow-xl border-0 bg-background">
+        <Card className="w-[640px] max-w-[92vw] h-[500px] shadow-xl border-0 bg-background">
           <CardHeader className="flex flex-row items-center justify-between p-4 bg-primary text-white">
             <CardTitle className="text-lg font-semibold text-white">Smart Tech Analytics Virtual Assistant</CardTitle>
             <Button
@@ -472,7 +472,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
                                 : 'bg-muted text-foreground'
                             }`}
                           >
-                            <p className="text-sm whitespace-pre">{message.content}</p>
+                            <p className={`text-sm ${message.role === 'assistant' ? 'whitespace-pre' : 'whitespace-pre-wrap break-words'}`}>{message.content}</p>
                           </div>
                         </div>
                       </div>

@@ -79,7 +79,6 @@ const RoleBasedAccess: React.FC<RoleBasedAccessProps> = ({
         <div className="text-xs text-muted-foreground">
           <p>Limited features available. Sign up for full access to:</p>
           <ul className="list-disc list-inside mt-1 space-y-0.5">
-            <li>Message threading</li>
             <li>Conversation export</li>
             <li>Extended chat history</li>
           </ul>
@@ -92,8 +91,8 @@ const RoleBasedAccess: React.FC<RoleBasedAccessProps> = ({
 export default RoleBasedAccess;
 
 // Helper functions for role-based feature access
-export const canUseThreading = (userRole: UserRole): boolean => {
-  return userRole !== 'guest';
+export const canUseThreading = (_userRole: UserRole): boolean => {
+  return true; // enable threading for all users, including guests
 };
 
 export const canExportConversations = (userRole: UserRole): boolean => {
