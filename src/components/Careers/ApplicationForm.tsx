@@ -37,8 +37,8 @@ const applicationSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   phone: z.string().min(10, "Please enter a valid phone number"),
-  preferredWorkStatus: z.enum(["Remote", "On-site", "Hybrid"], {
-    required_error: "Please select your preferred work status",
+  visaStatus: z.enum(["H1B", "Green Card", "Citizen", "Other"], {
+    required_error: "Please select your visa status",
   }),
   preferredLocation: z.string().min(2, "Please enter your preferred location"),
   linkedinProfile: z.string().url("Please enter a valid LinkedIn URL").optional().or(z.literal("")),
@@ -83,7 +83,7 @@ const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
       fullName: "",
       email: "",
       phone: "",
-      preferredWorkStatus: undefined,
+      visaStatus: undefined,
       preferredLocation: "",
       linkedinProfile: "",
       portfolioWebsite: "",
@@ -116,7 +116,7 @@ const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
       formData.append("fullName", data.fullName);
       formData.append("email", data.email);
       formData.append("phone", data.phone);
-      formData.append("preferredWorkStatus", data.preferredWorkStatus);
+      formData.append("visaStatus", data.visaStatus);
       formData.append("preferredLocation", data.preferredLocation);
       formData.append("linkedinProfile", data.linkedinProfile || "");
       formData.append("portfolioWebsite", data.portfolioWebsite || "");
@@ -208,20 +208,21 @@ const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="preferredWorkStatus"
+                name="visaStatus"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Preferred Work Status *</FormLabel>
+                    <FormLabel>Visa Status *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select work preference" />
+                        <SelectTrigger className="z-50 bg-background">
+                          <SelectValue placeholder="Select visa status" />
                         </SelectTrigger>
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="Remote">Remote</SelectItem>
-                        <SelectItem value="On-site">On-site</SelectItem>
-                        <SelectItem value="Hybrid">Hybrid</SelectItem>
+                      <SelectContent className="z-50 bg-background border border-border shadow-lg">
+                        <SelectItem value="H1B">H1B</SelectItem>
+                        <SelectItem value="Green Card">Green Card</SelectItem>
+                        <SelectItem value="Citizen">Citizen</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

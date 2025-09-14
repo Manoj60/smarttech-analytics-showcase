@@ -182,11 +182,11 @@ export type Database = {
           phone: string
           portfolio_website: string | null
           preferred_location: string | null
-          preferred_work_status: string | null
           resume_file_name: string
           resume_file_path: string
           status: string
           updated_at: string
+          visa_status: string | null
         }
         Insert: {
           admin_notes?: string | null
@@ -200,11 +200,11 @@ export type Database = {
           phone: string
           portfolio_website?: string | null
           preferred_location?: string | null
-          preferred_work_status?: string | null
           resume_file_name: string
           resume_file_path: string
           status?: string
           updated_at?: string
+          visa_status?: string | null
         }
         Update: {
           admin_notes?: string | null
@@ -218,11 +218,11 @@ export type Database = {
           phone?: string
           portfolio_website?: string | null
           preferred_location?: string | null
-          preferred_work_status?: string | null
           resume_file_name?: string
           resume_file_path?: string
           status?: string
           updated_at?: string
+          visa_status?: string | null
         }
         Relationships: [
           {
