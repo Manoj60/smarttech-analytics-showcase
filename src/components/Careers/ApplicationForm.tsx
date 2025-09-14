@@ -41,7 +41,7 @@ const applicationSchema = z.object({
     required_error: "Please select your visa status",
   }),
   preferredLocation: z.string().min(2, "Please enter your preferred location"),
-  linkedinProfile: z.string().url("Please enter a valid LinkedIn URL").optional().or(z.literal("")),
+  linkedinProfile: z.string().url("Please enter a valid LinkedIn URL").min(1, "LinkedIn profile is required"),
   portfolioWebsite: z.string().url("Please enter a valid website URL").optional().or(z.literal("")),
   coverLetter: z.string().optional(),
   resume: z
@@ -251,7 +251,7 @@ const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
                 name="linkedinProfile"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>LinkedIn Profile</FormLabel>
+                    <FormLabel>LinkedIn Profile *</FormLabel>
                     <FormControl>
                       <Input placeholder="https://linkedin.com/in/johndoe" {...field} />
                     </FormControl>
