@@ -87,6 +87,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
+    // Restrict sign-in to admin email only
+    if (email !== 'info@smarttechanalytics.com') {
+      const error = new Error('Access denied. Only admin can sign in.');
+      toast({
+        title: "Sign In Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -123,16 +134,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         description: error.message,
         variant: "destructive",
       });
-    } else if (data.user && !data.user.email_confirmed_at) {
-      toast({
-        title: "Success",
-        description: "Please check your email to confirm your account before signing in.",
-      });
-    } else {
-      toast({
-        title: "Success",
-        description: "Your account has been created successfully.",
-      });
+    } else if (data.user) {
+      // Send notification email to admin
+      try {
+        await supabase.functions.invoke('notify-admin-signup', {
+          body: { 
+            userEmail: email, 
+            fullName: fullName 
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send admin notification:', emailError);
+      }
+
+      if (!data.user.email_confirmed_at) {
+        toast({
+          title: "Success",
+          description: "Please check your email to confirm your account before signing in.",
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Your account has been created successfully.",
+        });
+      }
     }
     
     return { error };
