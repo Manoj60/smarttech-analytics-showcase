@@ -116,8 +116,19 @@ const handler = async (req: Request): Promise<Response> => {
     const fileName = `${fullName.replace(/\s+/g, "_")}_${timestamp}.${fileExtension}`;
     const filePath = `${jobId}/${fileName}`;
 
-    // Upload resume to storage
+    // Prepare resume buffer and base64 for email attachment, then upload to storage
     const resumeBuffer = await resumeFile.arrayBuffer();
+    function arrayBufferToBase64(buffer: ArrayBuffer) {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const chunkSize = 0x8000;
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+      }
+      return btoa(binary);
+    }
+    const resumeBase64 = arrayBufferToBase64(resumeBuffer);
+
     const { error: uploadError } = await supabase.storage
       .from("resumes")
       .upload(filePath, resumeBuffer, {
@@ -198,14 +209,8 @@ const handler = async (req: Request): Promise<Response> => {
       console.log('Applicant confirmation email sent:', userEmailResponse);
 
       // Send notification email to HR team with resume attachment
-      console.log('Sending notification email to: info@smarttechanalytics.com');
-      
-      // Get the resume file from storage for attachment
-      const { data: resumeData, error: downloadError } = await supabase.storage
-        .from("resumes")
-        .download(filePath);
-      
-      let emailOptions: any = {
+      console.log('Sending notification email to HR with attachment');
+      const hrEmailOptions: any = {
         from: 'Smart Tech Analytics <no-reply@smarttechanalytics.com>',
         reply_to: email,
         to: ['info@smarttechanalytics.com'],
@@ -239,28 +244,22 @@ const handler = async (req: Request): Promise<Response> => {
           <p><small>Submitted at: ${new Date().toISOString()}</small></p>
           <p>The applicant's resume is attached to this email for your review.</p>
         `,
-      };
-
-      // Add resume attachment if download was successful
-      if (!downloadError && resumeData) {
-        console.log('Adding resume attachment to email');
-        const resumeBuffer = await resumeData.arrayBuffer();
-        const resumeBase64 = btoa(String.fromCharCode(...new Uint8Array(resumeBuffer)));
-        
-        emailOptions.attachments = [
+        attachments: [
           {
             filename: resumeFile.name,
-            content: resumeBase64,
-            type: resumeFile.type,
+            content: resumeBase64
           }
-        ];
-      } else {
-        console.error('Failed to download resume for attachment:', downloadError);
-        emailOptions.html += `<p style="color: red;"><em>Note: Resume attachment could not be included. Please access it from the admin panel.</em></p>`;
+        ]
+      };
+      try {
+        const teamEmailResponse = await resend.emails.send(hrEmailOptions);
+        console.log('HR team notification email sent:', teamEmailResponse);
+      } catch (err) {
+        console.warn('Primary sender failed for HR email, retrying with onboarding@resend.dev', err);
+        hrEmailOptions.from = 'Smart Tech Analytics <onboarding@resend.dev>';
+        const fallbackHR = await resend.emails.send(hrEmailOptions);
+        console.log('HR email sent via fallback sender:', fallbackHR);
       }
-
-      const teamEmailResponse = await resend.emails.send(emailOptions);
-      console.log('HR team notification email sent:', teamEmailResponse);
 
       console.log('Both emails sent successfully');
     } catch (emailError: any) {
