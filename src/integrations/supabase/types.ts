@@ -181,6 +181,8 @@ export type Database = {
           linkedin_profile: string | null
           phone: string
           portfolio_website: string | null
+          preferred_location: string | null
+          preferred_work_status: string | null
           resume_file_name: string
           resume_file_path: string
           status: string
@@ -197,6 +199,8 @@ export type Database = {
           linkedin_profile?: string | null
           phone: string
           portfolio_website?: string | null
+          preferred_location?: string | null
+          preferred_work_status?: string | null
           resume_file_name: string
           resume_file_path: string
           status?: string
@@ -213,6 +217,8 @@ export type Database = {
           linkedin_profile?: string | null
           phone?: string
           portfolio_website?: string | null
+          preferred_location?: string | null
+          preferred_work_status?: string | null
           resume_file_name?: string
           resume_file_path?: string
           status?: string

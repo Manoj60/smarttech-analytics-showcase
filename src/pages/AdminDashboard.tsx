@@ -40,6 +40,8 @@ interface Application {
   full_name: string;
   email: string;
   phone: string;
+  preferred_work_status: string;
+  preferred_location: string;
   linkedin_profile: string;
   portfolio_website: string;
   cover_letter: string;

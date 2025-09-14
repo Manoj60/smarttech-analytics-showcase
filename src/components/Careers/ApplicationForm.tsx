@@ -22,6 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, X, FileText } from "lucide-react";
 
@@ -36,6 +37,10 @@ const applicationSchema = z.object({
   fullName: z.string().min(2, "Full name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   phone: z.string().min(10, "Please enter a valid phone number"),
+  preferredWorkStatus: z.enum(["Remote", "On-site", "Hybrid"], {
+    required_error: "Please select your preferred work status",
+  }),
+  preferredLocation: z.string().min(2, "Please enter your preferred location"),
   linkedinProfile: z.string().url("Please enter a valid LinkedIn URL").optional().or(z.literal("")),
   portfolioWebsite: z.string().url("Please enter a valid website URL").optional().or(z.literal("")),
   coverLetter: z.string().optional(),
@@ -78,6 +83,8 @@ const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
       fullName: "",
       email: "",
       phone: "",
+      preferredWorkStatus: undefined,
+      preferredLocation: "",
       linkedinProfile: "",
       portfolioWebsite: "",
       coverLetter: "",
@@ -109,6 +116,8 @@ const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
       formData.append("fullName", data.fullName);
       formData.append("email", data.email);
       formData.append("phone", data.phone);
+      formData.append("preferredWorkStatus", data.preferredWorkStatus);
+      formData.append("preferredLocation", data.preferredLocation);
       formData.append("linkedinProfile", data.linkedinProfile || "");
       formData.append("portfolioWebsite", data.portfolioWebsite || "");
       formData.append("coverLetter", data.coverLetter || "");
@@ -195,6 +204,45 @@ const ApplicationForm = ({ job, onClose, onSubmit }: ApplicationFormProps) => {
                 </FormItem>
               )}
             />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="preferredWorkStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preferred Work Status *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select work preference" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Remote">Remote</SelectItem>
+                        <SelectItem value="On-site">On-site</SelectItem>
+                        <SelectItem value="Hybrid">Hybrid</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="preferredLocation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preferred Location *</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. New York, NY or Remote" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField

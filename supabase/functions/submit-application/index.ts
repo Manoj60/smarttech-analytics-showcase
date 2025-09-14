@@ -12,6 +12,8 @@ interface ApplicationRequest {
   fullName: string;
   email: string;
   phone: string;
+  preferredWorkStatus: string;
+  preferredLocation: string;
   linkedinProfile?: string;
   portfolioWebsite?: string;
   coverLetter?: string;
@@ -45,13 +47,15 @@ const handler = async (req: Request): Promise<Response> => {
     const fullName = formData.get("fullName") as string;
     const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
+    const preferredWorkStatus = formData.get("preferredWorkStatus") as string;
+    const preferredLocation = formData.get("preferredLocation") as string;
     const linkedinProfile = formData.get("linkedinProfile") as string;
     const portfolioWebsite = formData.get("portfolioWebsite") as string;
     const coverLetter = formData.get("coverLetter") as string;
     const resumeFile = formData.get("resumeFile") as File;
 
     // Validate required fields
-    if (!jobId || !fullName || !email || !phone || !resumeFile) {
+    if (!jobId || !fullName || !email || !phone || !preferredWorkStatus || !preferredLocation || !resumeFile) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         {
@@ -129,6 +133,8 @@ const handler = async (req: Request): Promise<Response> => {
         full_name: fullName,
         email: email,
         phone: phone,
+        preferred_work_status: preferredWorkStatus,
+        preferred_location: preferredLocation,
         linkedin_profile: linkedinProfile || null,
         portfolio_website: portfolioWebsite || null,
         cover_letter: coverLetter || null,
@@ -186,6 +192,8 @@ const handler = async (req: Request): Promise<Response> => {
         <p><strong>Applicant:</strong> ${fullName}</p>
         <p><strong>Email:</strong> ${email}</p>
         <p><strong>Phone:</strong> ${phone}</p>
+        <p><strong>Preferred Work Status:</strong> ${preferredWorkStatus}</p>
+        <p><strong>Preferred Location:</strong> ${preferredLocation}</p>
         ${linkedinProfile ? `<p><strong>LinkedIn:</strong> <a href="${linkedinProfile}">${linkedinProfile}</a></p>` : ''}
         ${portfolioWebsite ? `<p><strong>Portfolio:</strong> <a href="${portfolioWebsite}">${portfolioWebsite}</a></p>` : ''}
         <p><strong>Department:</strong> ${job.department}</p>

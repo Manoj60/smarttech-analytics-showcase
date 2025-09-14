@@ -14,6 +14,8 @@ interface Application {
   full_name: string;
   email: string;
   phone: string;
+  preferred_work_status: string;
+  preferred_location: string;
   linkedin_profile: string;
   portfolio_website: string;
   cover_letter: string;
@@ -130,13 +132,21 @@ const ApplicationsTable = ({ applications, onStatusUpdate, onDownloadResume }: A
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <span className="font-medium">Email:</span> {app.email}
                 </div>
                 <div>
                   <span className="font-medium">Phone:</span> {app.phone}
                 </div>
+                <div>
+                  <span className="font-medium">Work Preference:</span> {app.preferred_work_status}
+                </div>
+                <div>
+                  <span className="font-medium">Location Preference:</span> {app.preferred_location}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mt-4">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Status:</span>
                   <Select
@@ -154,6 +164,9 @@ const ApplicationsTable = ({ applications, onStatusUpdate, onDownloadResume }: A
                       <SelectItem value="rejected">Rejected</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+                <div>
+                  <span className="font-medium">Applied:</span> {new Date(app.created_at).toLocaleDateString()}
                 </div>
               </div>
             </CardContent>
@@ -202,6 +215,24 @@ const ApplicationsTable = ({ applications, onStatusUpdate, onDownloadResume }: A
                         </a>
                       </p>
                     )}
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="font-semibold mb-2">Preferences</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="font-medium">Work Status:</span> {selectedApp.preferred_work_status}</p>
+                    <p><span className="font-medium">Location:</span> {selectedApp.preferred_location}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Application Details</h4>
+                  <div className="space-y-1 text-sm">
+                    <p><span className="font-medium">Applied:</span> {new Date(selectedApp.created_at).toLocaleDateString()}</p>
+                    <p><span className="font-medium">Status:</span> {getStatusLabel(selectedApp.status)}</p>
                   </div>
                 </div>
 
