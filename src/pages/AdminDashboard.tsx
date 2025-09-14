@@ -23,6 +23,7 @@ interface Job {
   department: string;
   employment_type: string;
   experience_level: string;
+  work_status: string;
   salary_range: string;
   description: string;
   responsibilities: string[];
@@ -319,7 +320,7 @@ const AdminDashboard = () => {
                           )}
                         </CardTitle>
                         <CardDescription>
-                          {job.company} • {job.department} • {job.location} • {job.employment_type}
+                          {job.company} • {job.department} • {job.location} • {job.employment_type} • {job.work_status}
                         </CardDescription>
                       </div>
                       <div className="flex gap-2">

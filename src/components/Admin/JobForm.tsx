@@ -19,6 +19,7 @@ const jobSchema = z.object({
   department: z.string().min(2, "Department is required"),
   employment_type: z.enum(["Full-time", "Part-time", "Contract", "Internship"]),
   experience_level: z.enum(["Entry", "Mid", "Senior", "Executive"]),
+  work_status: z.enum(["Remote", "On-site", "Hybrid"]),
   salary_range: z.string().optional(),
   description: z.string().min(10, "Description must be at least 10 characters"),
   application_deadline: z.string().optional(),
@@ -34,6 +35,7 @@ interface Job {
   department: string;
   employment_type: string;
   experience_level: string;
+  work_status: string;
   salary_range: string;
   description: string;
   responsibilities: string[];
@@ -65,6 +67,7 @@ const JobForm = ({ job, onSubmit, onCancel }: JobFormProps) => {
       department: job?.department || "",
       employment_type: job?.employment_type as any || "Full-time",
       experience_level: job?.experience_level as any || "Mid",
+      work_status: job?.work_status as any || "Remote",
       salary_range: job?.salary_range || "",
       description: job?.description || "",
       application_deadline: job?.application_deadline || "",
@@ -113,6 +116,7 @@ const JobForm = ({ job, onSubmit, onCancel }: JobFormProps) => {
         department: data.department,
         employment_type: data.employment_type,
         experience_level: data.experience_level,
+        work_status: data.work_status,
         salary_range: data.salary_range || "",
         description: data.description,
         responsibilities,
@@ -229,6 +233,23 @@ const JobForm = ({ job, onSubmit, onCancel }: JobFormProps) => {
               <SelectItem value="Part-time">Part-time</SelectItem>
               <SelectItem value="Contract">Contract</SelectItem>
               <SelectItem value="Internship">Internship</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Work Status *</Label>
+          <Select
+            value={form.watch("work_status")}
+            onValueChange={(value) => form.setValue("work_status", value as any)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select work status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Remote">Remote</SelectItem>
+              <SelectItem value="On-site">On-site</SelectItem>
+              <SelectItem value="Hybrid">Hybrid</SelectItem>
             </SelectContent>
           </Select>
         </div>

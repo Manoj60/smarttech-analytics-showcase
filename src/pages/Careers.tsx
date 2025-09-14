@@ -19,6 +19,7 @@ interface Job {
   department: string;
   employment_type: string;
   experience_level: string;
+  work_status: string;
   salary_range: string;
   description: string;
   responsibilities: string[];
@@ -208,6 +209,9 @@ const Careers = () => {
                           </Badge>
                           <Badge variant={getEmploymentTypeBadgeVariant(job.employment_type)}>
                             {job.employment_type}
+                          </Badge>
+                          <Badge variant="outline">
+                            {job.work_status}
                           </Badge>
                         </div>
                       </div>

@@ -246,6 +246,7 @@ export type Database = {
           salary_range: string | null
           title: string
           updated_at: string
+          work_status: string | null
         }
         Insert: {
           application_deadline?: string | null
@@ -264,6 +265,7 @@ export type Database = {
           salary_range?: string | null
           title: string
           updated_at?: string
+          work_status?: string | null
         }
         Update: {
           application_deadline?: string | null
@@ -282,6 +284,7 @@ export type Database = {
           salary_range?: string | null
           title?: string
           updated_at?: string
+          work_status?: string | null
         }
         Relationships: [
           {
