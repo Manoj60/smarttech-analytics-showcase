@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Building, Clock, DollarSign, Calendar, Briefcase, Users, Plus } from "lucide-react";
+import { MapPin, Building, Clock, DollarSign, Calendar, Briefcase, Users, Plus, Edit, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ApplicationForm from "@/components/Careers/ApplicationForm";
 import JobForm from "@/components/Admin/JobForm";
@@ -33,6 +33,7 @@ const Careers = () => {
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [showJobForm, setShowJobForm] = useState(false);
+  const [editingJob, setEditingJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
   const { isAdmin } = useAuth();
@@ -79,6 +80,32 @@ const Careers = () => {
 
   const refreshJobs = () => {
     fetchJobs();
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm("Are you sure you want to permanently delete this job? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("jobs")
+        .delete()
+        .eq("id", jobId);
+
+      if (error) throw error;
+      await fetchJobs();
+      toast({
+        title: "Success",
+        description: "Job deleted successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete job",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -154,18 +181,23 @@ const Careers = () => {
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                      <DialogTitle>Create New Job Posting</DialogTitle>
+                      <DialogTitle>{editingJob ? "Edit Job Posting" : "Create New Job Posting"}</DialogTitle>
                     </DialogHeader>
                     <JobForm
+                      job={editingJob}
                       onSubmit={() => {
                         setShowJobForm(false);
+                        setEditingJob(null);
                         refreshJobs();
                         toast({
                           title: "Success",
-                          description: "Job posted successfully!",
+                          description: editingJob ? "Job updated successfully!" : "Job posted successfully!",
                         });
                       }}
-                      onCancel={() => setShowJobForm(false)}
+                      onCancel={() => {
+                        setShowJobForm(false);
+                        setEditingJob(null);
+                      }}
                     />
                   </DialogContent>
                 </Dialog>
@@ -198,10 +230,36 @@ const Careers = () => {
                     <CardHeader className="pb-4">
                       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                         <div className="flex-1">
-                          <CardTitle className="text-2xl font-heading font-bold mb-2 text-foreground">{job.title}</CardTitle>
-                          <CardDescription className="text-base leading-relaxed text-muted-foreground">
-                            {job.description}
-                          </CardDescription>
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <CardTitle className="text-2xl font-heading font-bold mb-2 text-foreground">{job.title}</CardTitle>
+                              <CardDescription className="text-base leading-relaxed text-muted-foreground">
+                                {job.description}
+                              </CardDescription>
+                            </div>
+                            {isAdmin() && (
+                              <div className="flex gap-2 ml-4">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setEditingJob(job);
+                                    setShowJobForm(true);
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDeleteJob(job.id)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Badge variant={getExperienceBadgeVariant(job.experience_level)}>
