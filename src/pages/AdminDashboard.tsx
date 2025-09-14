@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { Plus, Edit, Archive, Users, Download, Search, Filter } from "lucide-react";
+import { Plus, Edit, Archive, Trash2, Users, Download, Search, Filter } from "lucide-react";
 import JobForm from "@/components/Admin/JobForm";
 import ApplicationsTable from "@/components/Admin/ApplicationsTable";
 
@@ -140,6 +140,32 @@ const AdminDashboard = () => {
       toast({
         title: "Error",
         description: "Failed to archive job",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteJob = async (jobId: string) => {
+    if (!confirm("Are you sure you want to permanently delete this job? This action cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("jobs")
+        .delete()
+        .eq("id", jobId);
+
+      if (error) throw error;
+      await fetchJobs();
+      toast({
+        title: "Success",
+        description: "Job deleted successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete job",
         variant: "destructive",
       });
     }
@@ -345,6 +371,14 @@ const AdminDashboard = () => {
                             <Archive className="h-4 w-4" />
                           </Button>
                         )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDeleteJob(job.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </CardHeader>
