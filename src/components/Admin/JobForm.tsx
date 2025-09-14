@@ -135,12 +135,12 @@ const JobForm = ({ job, onSubmit, onCancel }: JobFormProps) => {
         
         if (error) throw error;
       } else {
-        // Create new job
-        const { error } = await supabase
-          .from("jobs")
-          .insert([jobData]);
+        // Create new job using edge function
+        const response = await supabase.functions.invoke("create-job", {
+          body: jobData
+        });
         
-        if (error) throw error;
+        if (response.error) throw response.error;
       }
 
       onSubmit();
