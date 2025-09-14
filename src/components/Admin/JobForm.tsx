@@ -14,12 +14,14 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const jobSchema = z.object({
   title: z.string().min(2, "Title must be at least 2 characters"),
+  company: z.string().min(2, "Company name is required"),
   location: z.string().min(2, "Location is required"),
   department: z.string().min(2, "Department is required"),
   employment_type: z.enum(["Full-time", "Part-time", "Contract", "Internship"]),
   experience_level: z.enum(["Entry", "Mid", "Senior", "Executive"]),
   salary_range: z.string().optional(),
   description: z.string().min(10, "Description must be at least 10 characters"),
+  application_deadline: z.string().optional(),
 });
 
 type JobFormData = z.infer<typeof jobSchema>;
@@ -27,6 +29,7 @@ type JobFormData = z.infer<typeof jobSchema>;
 interface Job {
   id?: string;
   title: string;
+  company: string;
   location: string;
   department: string;
   employment_type: string;
@@ -35,6 +38,7 @@ interface Job {
   description: string;
   responsibilities: string[];
   qualifications: string[];
+  application_deadline: string;
   is_active?: boolean;
 }
 
@@ -56,12 +60,14 @@ const JobForm = ({ job, onSubmit, onCancel }: JobFormProps) => {
     resolver: zodResolver(jobSchema),
     defaultValues: {
       title: job?.title || "",
+      company: job?.company || "Smart Tech Analytics",
       location: job?.location || "",
       department: job?.department || "",
       employment_type: job?.employment_type as any || "Full-time",
       experience_level: job?.experience_level as any || "Mid",
       salary_range: job?.salary_range || "",
       description: job?.description || "",
+      application_deadline: job?.application_deadline || "",
     },
   });
 
@@ -102,6 +108,7 @@ const JobForm = ({ job, onSubmit, onCancel }: JobFormProps) => {
     try {
       const jobData = {
         title: data.title,
+        company: data.company,
         location: data.location,
         department: data.department,
         employment_type: data.employment_type,
@@ -110,6 +117,7 @@ const JobForm = ({ job, onSubmit, onCancel }: JobFormProps) => {
         description: data.description,
         responsibilities,
         qualifications,
+        application_deadline: data.application_deadline || null,
         is_active: true,
         created_by: userProfile?.user_id,
       };
@@ -156,6 +164,20 @@ const JobForm = ({ job, onSubmit, onCancel }: JobFormProps) => {
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="company">Company *</Label>
+          <Input
+            id="company"
+            {...form.register("company")}
+            placeholder="e.g. Smart Tech Analytics"
+          />
+          {form.formState.errors.company && (
+            <p className="text-sm text-destructive">{form.formState.errors.company.message}</p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
           <Label htmlFor="location">Location *</Label>
           <Input
             id="location"
@@ -164,6 +186,18 @@ const JobForm = ({ job, onSubmit, onCancel }: JobFormProps) => {
           />
           {form.formState.errors.location && (
             <p className="text-sm text-destructive">{form.formState.errors.location.message}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="application_deadline">Application Deadline</Label>
+          <Input
+            id="application_deadline"
+            type="datetime-local"
+            {...form.register("application_deadline")}
+          />
+          {form.formState.errors.application_deadline && (
+            <p className="text-sm text-destructive">{form.formState.errors.application_deadline.message}</p>
           )}
         </div>
       </div>

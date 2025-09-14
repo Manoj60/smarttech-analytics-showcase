@@ -18,6 +18,7 @@ import ApplicationsTable from "@/components/Admin/ApplicationsTable";
 interface Job {
   id: string;
   title: string;
+  company: string;
   location: string;
   department: string;
   employment_type: string;
@@ -26,6 +27,7 @@ interface Job {
   description: string;
   responsibilities: string[];
   qualifications: string[];
+  application_deadline: string;
   is_active: boolean;
   created_at: string;
   created_by: string;
@@ -317,7 +319,7 @@ const AdminDashboard = () => {
                           )}
                         </CardTitle>
                         <CardDescription>
-                          {job.department} • {job.location} • {job.employment_type}
+                          {job.company} • {job.department} • {job.location} • {job.employment_type}
                         </CardDescription>
                       </div>
                       <div className="flex gap-2">
@@ -346,6 +348,9 @@ const AdminDashboard = () => {
                   <CardContent>
                     <p className="text-sm text-muted-foreground mb-2">
                       {job.experience_level} • {job.salary_range}
+                      {job.application_deadline && (
+                        <span className="ml-2">• Deadline: {new Date(job.application_deadline).toLocaleDateString()}</span>
+                      )}
                     </p>
                     <p className="text-sm">{job.description}</p>
                   </CardContent>

@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 interface Job {
   id: string;
   title: string;
+  company: string;
   location: string;
   department: string;
   employment_type: string;
@@ -19,6 +20,7 @@ interface Job {
   description: string;
   responsibilities: string[];
   qualifications: string[];
+  application_deadline: string;
   created_at: string;
 }
 
