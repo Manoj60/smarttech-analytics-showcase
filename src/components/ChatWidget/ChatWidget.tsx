@@ -265,6 +265,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
       toast({
         title: "Transcript Sent",
         description: "A copy of your conversation has been sent to your email.",
+        variant: "default",
       });
     } catch (error) {
       console.error('Error sending transcript:', error);
@@ -283,6 +284,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
     toast({
       title: "Chat Timeout",
       description: "Chat closed due to inactivity. Transcript sent to your email.",
+      variant: "default",
     });
   };
 

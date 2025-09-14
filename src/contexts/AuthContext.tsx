@@ -151,11 +151,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         toast({
           title: "Success",
           description: "Please check your email to confirm your account before signing in.",
+          variant: "default",
         });
       } else {
         toast({
           title: "Success",
           description: "Your account has been created successfully.",
+          variant: "default",
         });
       }
     }
@@ -171,6 +173,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     toast({
       title: "Signed Out",
       description: "You have been successfully signed out.",
+      variant: "default",
     });
   };
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Download, FileText } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 interface Message {
   id: string;
@@ -58,6 +58,7 @@ const ConversationExporter: React.FC<ConversationExporterProps> = ({
     toast({
       title: "Export Complete",
       description: "Conversation exported as JSON file.",
+      variant: "default",
     });
   };
 
@@ -97,6 +98,7 @@ ${msg.content}
     toast({
       title: "Export Complete",
       description: "Conversation exported as text file.",
+      variant: "default",
     });
   };
 
