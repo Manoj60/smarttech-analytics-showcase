@@ -567,19 +567,19 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
 
       {/* Close Confirmation Dialog */}
       <Dialog open={showCloseDialog} onOpenChange={setShowCloseDialog}>
-        <DialogContent className="gradient-card border-border shadow-medium font-body">
+        <DialogContent className="bg-primary text-primary-foreground border-primary/20 shadow-medium font-body">
           <DialogHeader>
-            <DialogTitle className="font-heading text-foreground">End Chat Session?</DialogTitle>
-            <DialogDescription className="text-muted-foreground font-body">
+            <DialogTitle className="font-heading text-primary-foreground">End Chat Session?</DialogTitle>
+            <DialogDescription className="text-primary-foreground/80 font-body">
               Would you like to continue chatting or end this conversation? 
               If you end the chat, a transcript will be sent to your email.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={handleContinueChat} className="font-body">
+            <Button variant="outline" onClick={handleContinueChat} className="font-body border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/10">
               Continue Chatting
             </Button>
-            <Button onClick={handleEndChat} className="bg-primary text-primary-foreground hover:bg-primary/90 font-body">
+            <Button onClick={handleEndChat} className="bg-primary-foreground text-primary hover:bg-primary-foreground/90 font-body">
               End & Send Transcript
             </Button>
           </DialogFooter>
