@@ -5,6 +5,7 @@ import { Resend } from "npm:resend@2.0.0";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
 interface ApplicationRequest {
@@ -34,15 +35,20 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    console.log('Submit application function called');
+    console.log('Request method:', req.method);
+    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
     // Parse form data
+    console.log('Parsing form data...');
     const formData = await req.formData();
+    console.log('Form data keys:', Array.from(formData.keys()));
+    
     const jobId = formData.get("jobId") as string;
     const fullName = formData.get("fullName") as string;
     const email = formData.get("email") as string;
@@ -54,8 +60,11 @@ const handler = async (req: Request): Promise<Response> => {
     const coverLetter = formData.get("coverLetter") as string;
     const resumeFile = formData.get("resumeFile") as File;
 
+    console.log('Parsed data:', { jobId, fullName, email, phone, visaStatus, preferredLocation });
+
     // Validate required fields
     if (!jobId || !fullName || !email || !phone || !visaStatus || !preferredLocation || !resumeFile) {
+      console.log('Missing required fields:', { jobId: !!jobId, fullName: !!fullName, email: !!email, phone: !!phone, visaStatus: !!visaStatus, preferredLocation: !!preferredLocation, resumeFile: !!resumeFile });
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
         {
@@ -81,6 +90,8 @@ const handler = async (req: Request): Promise<Response> => {
         }
       );
     }
+
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
     // Get job details
     const { data: job, error: jobError } = await supabase
