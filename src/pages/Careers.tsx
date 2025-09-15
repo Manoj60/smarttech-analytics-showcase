@@ -8,6 +8,7 @@ import { MapPin, Building, Clock, DollarSign, Calendar, Briefcase, Users, Plus, 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import ApplicationForm from "@/components/Careers/ApplicationForm";
 import JobForm from "@/components/Admin/JobForm";
+import SmartJobFilter from "@/components/Careers/SmartJobFilter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -30,6 +31,7 @@ interface Job {
 
 const Careers = () => {
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [filteredJobs, setFilteredJobs] = useState<Job[]>([]);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [showApplicationForm, setShowApplicationForm] = useState(false);
   const [showJobForm, setShowJobForm] = useState(false);
@@ -52,6 +54,7 @@ const Careers = () => {
 
       if (error) throw error;
       setJobs(data || []);
+      setFilteredJobs(data || []);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -209,9 +212,15 @@ const Careers = () => {
         {/* Job Listings Section */}
         <section className="py-20">
           <div className="container mx-auto px-4">
+            {/* Smart AI Filter */}
+            <SmartJobFilter 
+              jobs={jobs} 
+              onFilteredJobs={setFilteredJobs}
+              loading={loading}
+            />
 
             <div className="grid gap-8">
-              {jobs.length === 0 ? (
+              {filteredJobs.length === 0 ? (
                 <Card className="gradient-card border-border shadow-medium">
                   <CardContent className="flex flex-col items-center justify-center py-16">
                     <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6">
@@ -225,7 +234,7 @@ const Careers = () => {
                   </CardContent>
                 </Card>
               ) : (
-                jobs.map((job) => (
+                filteredJobs.map((job) => (
                   <Card key={job.id} className="gradient-card border-border shadow-medium transition-smooth hover:shadow-strong hover:border-primary/20">
                     <CardHeader className="pb-4">
                       <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
