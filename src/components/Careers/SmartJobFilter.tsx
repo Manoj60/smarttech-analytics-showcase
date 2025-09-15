@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Sparkles, X, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import VoiceSearch from './VoiceSearch';
 
 interface Job {
   id: string;
@@ -108,6 +109,11 @@ const SmartJobFilter: React.FC<SmartJobFilterProps> = ({
     handleSmartFilter(query);
   };
 
+  const handleVoiceTranscription = (transcription: string) => {
+    setQuery(transcription);
+    handleSmartFilter(transcription);
+  };
+
   return (
     <div className="space-y-6 mb-8">
       {/* AI Filter Input */}
@@ -119,11 +125,15 @@ const SmartJobFilter: React.FC<SmartJobFilterProps> = ({
               placeholder="Ask AI to filter jobs... e.g., 'remote senior developer roles' or 'jobs posted this week'"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-10 pr-4"
+              className="pl-10 pr-12"
               disabled={isFiltering || loading}
             />
             <Sparkles className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-primary" />
           </div>
+          <VoiceSearch 
+            onTranscription={handleVoiceTranscription}
+            disabled={isFiltering || loading}
+          />
           <Button 
             type="submit" 
             disabled={!query.trim() || isFiltering || loading}
