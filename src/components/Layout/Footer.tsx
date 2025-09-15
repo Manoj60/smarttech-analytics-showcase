@@ -85,7 +85,7 @@ const Footer = () => {
 
         <div className="border-t border-primary/20 mt-8 pt-8 text-center">
           <p className="text-primary-light text-sm">
-            © 2024 Smart Tech Analytics. All rights reserved.
+            © 2021 Smart Tech Analytics. All rights reserved.
           </p>
         </div>
       </div>
