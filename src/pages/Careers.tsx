@@ -170,6 +170,17 @@ const Careers = () => {
           </div>
         </section>
 
+        {/* Smart AI Filter - Positioned after hero section */}
+        <section className="py-8">
+          <div className="container mx-auto px-4">
+            <SmartJobFilter 
+              jobs={jobs} 
+              onFilteredJobs={setFilteredJobs}
+              loading={loading}
+            />
+          </div>
+        </section>
+
         {/* Admin Controls - Only visible to admin users */}
         {isAdmin() && (
           <section className="py-8 border-b border-border">
@@ -212,13 +223,6 @@ const Careers = () => {
         {/* Job Listings Section */}
         <section className="py-20">
           <div className="container mx-auto px-4">
-            {/* Smart AI Filter */}
-            <SmartJobFilter 
-              jobs={jobs} 
-              onFilteredJobs={setFilteredJobs}
-              loading={loading}
-            />
-
             <div className="grid gap-8">
               {filteredJobs.length === 0 ? (
                 <Card className="gradient-card border-border shadow-medium">
