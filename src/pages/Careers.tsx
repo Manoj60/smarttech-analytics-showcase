@@ -158,7 +158,7 @@ const Careers = () => {
         {/* Hero Section */}
         <section className="py-20 lg:py-32 bg-secondary/50">
           <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center">
+            <div className="max-w-4xl mx-auto text-center mb-16">
               <h1 className="text-4xl lg:text-6xl font-heading font-bold mb-6 text-foreground leading-tight">
                 Career <span className="text-primary">Opportunities</span>
               </h1>
@@ -167,12 +167,8 @@ const Careers = () => {
                 to help transform how businesses understand their data.
               </p>
             </div>
-          </div>
-        </section>
-
-        {/* Smart AI Filter - Positioned after hero section */}
-        <section className="py-8">
-          <div className="container mx-auto px-4">
+            
+            {/* Smart AI Filter - At bottom of hero section */}
             <SmartJobFilter 
               jobs={jobs} 
               onFilteredJobs={setFilteredJobs}
