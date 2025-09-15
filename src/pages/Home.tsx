@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Users, Target, Lightbulb, Award } from 'lucide-react';
+import { ArrowRight, Users, Target, Lightbulb, Award, Heart } from 'lucide-react';
 import heroImage from '@/assets/hero-image.jpg';
 
 const Home = () => {
@@ -23,6 +23,12 @@ const Home = () => {
       role: "VP of Analytics",
       bio: "Data science expert specializing in predictive analytics and business intelligence solutions.",
       icon: <Target className="w-6 h-6 text-primary" />
+    },
+    {
+      name: "Samikshya Adhikari",
+      role: "Head of Health Services",
+      bio: "Over a decade of experience in various hospitals, including burn and critical care services, bringing healthcare expertise to our technology solutions.",
+      icon: <Heart className="w-6 h-6 text-primary" />
     }
   ];
 
