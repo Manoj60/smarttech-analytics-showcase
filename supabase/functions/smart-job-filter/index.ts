@@ -36,9 +36,9 @@ serve(async (req) => {
       throw new Error('Query and jobs data are required');
     }
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
+    if (!deepseekApiKey) {
+      throw new Error('DeepSeek API key not configured');
     }
 
     // Create a comprehensive job data summary for the AI
@@ -80,14 +80,14 @@ ${JSON.stringify(jobsContext, null, 2)}
 
 Return only a JSON array of job IDs that match the query. Example: ["id1", "id2", "id3"]`;
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${deepseekApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'deepseek-chat',
         messages: [
           {
             role: 'system',
@@ -101,7 +101,7 @@ Return only a JSON array of job IDs that match the query. Example: ["id1", "id2"
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(`OpenAI API error: ${errorData.error?.message || 'Unknown error'}`);
+      throw new Error(`DeepSeek API error: ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
