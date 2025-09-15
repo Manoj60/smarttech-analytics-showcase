@@ -170,20 +170,9 @@ const Careers = () => {
           </div>
         </section>
 
-        {/* Smart AI Filter - Moved up by 5 inches */}
-        <section className="py-8 bg-secondary/20" style={{ marginTop: '-480px', position: 'relative', zIndex: 10 }}>
-          <div className="container mx-auto px-4">
-            <SmartJobFilter 
-              jobs={jobs} 
-              onFilteredJobs={setFilteredJobs}
-              loading={loading}
-            />
-          </div>
-        </section>
-
         {/* Admin Controls - Only visible to admin users */}
         {isAdmin() && (
-          <section className="py-8 border-b border-border" style={{ marginTop: '480px' }}>
+          <section className="py-8 border-b border-border">
             <div className="container mx-auto px-4">
               <div className="flex justify-center">
                 <Dialog open={showJobForm} onOpenChange={setShowJobForm}>
@@ -223,6 +212,13 @@ const Careers = () => {
         {/* Job Listings Section */}
         <section className="py-20">
           <div className="container mx-auto px-4">
+            {/* Smart AI Filter */}
+            <SmartJobFilter 
+              jobs={jobs} 
+              onFilteredJobs={setFilteredJobs}
+              loading={loading}
+            />
+
             <div className="grid gap-8">
               {filteredJobs.length === 0 ? (
                 <Card className="gradient-card border-border shadow-medium">
