@@ -43,10 +43,10 @@ const VoiceSearch: React.FC<VoiceSearchProps> = ({ onTranscription, disabled = f
         };
 
         mediaRecorderRef.current.onstop = async () => {
-          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          await processAudio(audioBlob);
-          // Stop all tracks
+          // Since we're now using browser-based transcription only,
+          // we don't need to process audio on the server
           stream.getTracks().forEach(track => track.stop());
+          setIsProcessing(false);
         };
 
         mediaRecorderRef.current.start();
