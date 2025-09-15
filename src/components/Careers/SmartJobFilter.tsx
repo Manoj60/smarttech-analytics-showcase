@@ -109,9 +109,11 @@ const SmartJobFilter: React.FC<SmartJobFilterProps> = ({
     handleSmartFilter(query);
   };
 
-  const handleVoiceTranscription = (transcription: string) => {
+  const handleVoiceTranscription = (transcription: string, isFinal?: boolean) => {
     setQuery(transcription);
-    handleSmartFilter(transcription);
+    if (isFinal) {
+      handleSmartFilter(transcription);
+    }
   };
 
   return (
