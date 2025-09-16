@@ -222,7 +222,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
           id: msg.id,
           content: msg.content,
           role: msg.role as 'user' | 'assistant',
-          created_at: msg.created_at
+          created_at: msg.created_at,
+          thread_id: msg.thread_id
         })));
       }
 
