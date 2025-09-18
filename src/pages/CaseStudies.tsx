@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MiniChatUI } from '@/components/ui/mini-chat';
 import { PromptBox } from '@/components/ui/prompt-box';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Target, CheckCircle, ArrowRight } from 'lucide-react';
@@ -85,32 +84,24 @@ const CaseStudies = () => {
         </div>
       </section>
 
-      {/* Mini Chat UI Section */}
+      {/* Prompt Box Section */}
       <section className="py-12 bg-secondary/30">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center mb-8">
             <h2 className="text-2xl lg:text-3xl font-heading font-bold mb-4 text-foreground">
-              Have Questions About Our Solutions?
+              Submit Your Requirements
             </h2>
             <p className="text-muted-foreground mb-6">
-              Chat with our AI assistant to learn how we can help transform your business
+              Describe your business challenges and requirements to get started
             </p>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              <MiniChatUI />
-              <div>
-                <h3 className="text-lg font-semibold mb-4 text-foreground">
-                  Submit Your Requirements
-                </h3>
-                <PromptBox 
-                  placeholder="Describe your business challenges and requirements..."
-                  onSubmit={(prompt, files) => {
-                    console.log('Prompt:', prompt);
-                    console.log('Files:', files);
-                    // Handle submission here
-                  }}
-                />
-              </div>
-            </div>
+            <PromptBox 
+              placeholder="Describe your business challenges and requirements..."
+              onSubmit={(prompt, files) => {
+                console.log('Prompt:', prompt);
+                console.log('Files:', files);
+                // Handle submission here
+              }}
+            />
           </div>
         </div>
       </section>
