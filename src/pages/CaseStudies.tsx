@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { MiniChatUI } from '@/components/ui/mini-chat';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Target, CheckCircle, ArrowRight } from 'lucide-react';
 
@@ -79,6 +80,21 @@ const CaseStudies = () => {
             <p className="text-xl lg:text-2xl text-primary-light leading-relaxed">
               Real-world success stories showcasing how our AI and analytics solutions have transformed businesses and delivered measurable results.
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Mini Chat UI Section */}
+      <section className="py-12 bg-secondary/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto text-center mb-8">
+            <h2 className="text-2xl lg:text-3xl font-heading font-bold mb-4 text-foreground">
+              Have Questions About Our Solutions?
+            </h2>
+            <p className="text-muted-foreground mb-6">
+              Chat with our AI assistant to learn how we can help transform your business
+            </p>
+            <MiniChatUI />
           </div>
         </div>
       </section>
