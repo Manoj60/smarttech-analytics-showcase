@@ -88,9 +88,6 @@ const CaseStudies = () => {
       <section className="py-12 bg-secondary/30">
         <div className="container mx-auto px-4">
           <div className="max-w-2xl mx-auto text-center mb-8">
-            <h2 className="text-2xl lg:text-3xl font-heading font-bold mb-4 text-foreground">
-              Submit Your Requirements
-            </h2>
             <p className="text-muted-foreground mb-6">
               Describe your business challenges and requirements to get started
             </p>
