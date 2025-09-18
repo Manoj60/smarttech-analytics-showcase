@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MiniChatUI } from '@/components/ui/mini-chat';
+import { PromptBox } from '@/components/ui/prompt-box';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Target, CheckCircle, ArrowRight } from 'lucide-react';
 
@@ -94,7 +95,22 @@ const CaseStudies = () => {
             <p className="text-muted-foreground mb-6">
               Chat with our AI assistant to learn how we can help transform your business
             </p>
-            <MiniChatUI />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              <MiniChatUI />
+              <div>
+                <h3 className="text-lg font-semibold mb-4 text-foreground">
+                  Submit Your Requirements
+                </h3>
+                <PromptBox 
+                  placeholder="Describe your business challenges and requirements..."
+                  onSubmit={(prompt, files) => {
+                    console.log('Prompt:', prompt);
+                    console.log('Files:', files);
+                    // Handle submission here
+                  }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
