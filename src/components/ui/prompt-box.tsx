@@ -13,7 +13,14 @@ import {
   Mic,
   Smile,
   Bot,
-  User
+  User,
+  Copy,
+  Volume2,
+  ThumbsUp,
+  ThumbsDown,
+  MoreHorizontal,
+  Share2,
+  Check
 } from 'lucide-react';
 
 interface AttachedFile {
@@ -29,6 +36,8 @@ interface ChatMessage {
   content: string;
   files?: AttachedFile[];
   timestamp: Date;
+  rating?: 'up' | 'down' | null;
+  copied?: boolean;
 }
 
 interface PromptBoxProps {
@@ -53,6 +62,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -123,6 +133,58 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
 
   const removeFile = (fileId: string) => {
     setAttachedFiles(prev => prev.filter(f => f.id !== fileId));
+  };
+
+  const handleCopyMessage = async (messageId: string, content: string) => {
+    try {
+      await navigator.clipboard.writeText(content);
+      setCopiedMessage(messageId);
+      setTimeout(() => setCopiedMessage(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy message:', err);
+    }
+  };
+
+  const handleRateMessage = (messageId: string, rating: 'up' | 'down') => {
+    setMessages(prev => prev.map(msg => 
+      msg.id === messageId 
+        ? { ...msg, rating: msg.rating === rating ? null : rating }
+        : msg
+    ));
+  };
+
+  const handleVoiceMessage = (content: string) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(content);
+      utterance.rate = 0.8;
+      speechSynthesis.speak(utterance);
+    }
+  };
+
+  const handleShareMessage = (content: string) => {
+    if (navigator.share) {
+      navigator.share({
+        title: 'AI Response',
+        text: content,
+      });
+    } else {
+      handleCopyMessage('share', content);
+    }
+  };
+
+  const generateMorePrecise = async (messageId: string, originalContent: string) => {
+    setIsTyping(true);
+    
+    setTimeout(() => {
+      const preciseResponse = `${originalContent}\n\nFor more specific details: Our solutions are tailored to your exact requirements. We typically conduct a thorough analysis of your current systems, identify key improvement areas, and develop a customized implementation roadmap. Would you like to schedule a detailed consultation to discuss your specific needs?`;
+      
+      setMessages(prev => prev.map(msg => 
+        msg.id === messageId 
+          ? { ...msg, content: preciseResponse }
+          : msg
+      ));
+      setIsTyping(false);
+    }, 1000);
   };
 
   const generateResponse = async (userPrompt: string, files: AttachedFile[]) => {
@@ -242,8 +304,81 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
                           : 'bg-secondary text-foreground'
                       }`}
                     >
-                      <p className="text-sm leading-relaxed">{message.content}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                     </div>
+                    
+                    {/* Message Actions - Only for assistant messages */}
+                    {message.role === 'assistant' && (
+                      <div className="flex items-center gap-1 max-w-[85%]">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleCopyMessage(message.id, message.content)}
+                          className="h-8 w-8 p-0 hover:bg-secondary/80"
+                          title="Copy message"
+                        >
+                          {copiedMessage === message.id ? (
+                            <Check className="w-3 h-3 text-green-600" />
+                          ) : (
+                            <Copy className="w-3 h-3" />
+                          )}
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleVoiceMessage(message.content)}
+                          className="h-8 w-8 p-0 hover:bg-secondary/80"
+                          title="Read aloud"
+                        >
+                          <Volume2 className="w-3 h-3" />
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRateMessage(message.id, 'up')}
+                          className={`h-8 w-8 p-0 hover:bg-secondary/80 ${
+                            message.rating === 'up' ? 'text-green-600' : ''
+                          }`}
+                          title="Good response"
+                        >
+                          <ThumbsUp className="w-3 h-3" />
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRateMessage(message.id, 'down')}
+                          className={`h-8 w-8 p-0 hover:bg-secondary/80 ${
+                            message.rating === 'down' ? 'text-red-600' : ''
+                          }`}
+                          title="Poor response"
+                        >
+                          <ThumbsDown className="w-3 h-3" />
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => generateMorePrecise(message.id, message.content)}
+                          className="h-8 w-8 p-0 hover:bg-secondary/80"
+                          title="More precise"
+                        >
+                          <MoreHorizontal className="w-3 h-3" />
+                        </Button>
+                        
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleShareMessage(message.content)}
+                          className="h-8 w-8 p-0 hover:bg-secondary/80"
+                          title="Share"
+                        >
+                          <Share2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    )}
                     {message.files && message.files.length > 0 && (
                       <div className="flex flex-wrap gap-2 max-w-[85%]">
                         {message.files.map((file) => (
