@@ -11,7 +11,9 @@ import {
   Image, 
   File,
   Mic,
-  Smile
+  Smile,
+  Bot,
+  User
 } from 'lucide-react';
 
 interface AttachedFile {
@@ -21,12 +23,21 @@ interface AttachedFile {
   preview?: string;
 }
 
+interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  files?: AttachedFile[];
+  timestamp: Date;
+}
+
 interface PromptBoxProps {
   onSubmit?: (prompt: string, files: File[]) => void;
   placeholder?: string;
   maxFiles?: number;
   allowedFileTypes?: string[];
   className?: string;
+  showConversation?: boolean;
 }
 
 export const PromptBox: React.FC<PromptBoxProps> = ({
@@ -34,10 +45,13 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
   placeholder = "Enter your prompt here...",
   maxFiles = 5,
   allowedFileTypes = ['image/*', '.pdf', '.doc', '.docx', '.txt'],
-  className = ''
+  className = '',
+  showConversation = true
 }) => {
   const [prompt, setPrompt] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [isTyping, setIsTyping] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -111,12 +125,70 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
     setAttachedFiles(prev => prev.filter(f => f.id !== fileId));
   };
 
-  const handleSubmit = () => {
+  const generateResponse = async (userPrompt: string, files: AttachedFile[]) => {
+    // Simulate AI response based on prompt content
+    const responses = {
+      default: "Thank you for your inquiry! Our team of AI and analytics experts would be happy to help you with your requirements. Based on your description, we can provide customized solutions that align with your business objectives.",
+      data: "Our data analytics solutions can help you unlock valuable insights from your data. We've helped companies achieve 40% cost reductions and 350% ROI through our AI-powered platforms.",
+      ai: "Our AI solutions include machine learning models, predictive analytics, and automation systems. We've successfully implemented AI solutions that have improved efficiency by up to 60% for our clients.",
+      healthcare: "We have extensive experience in healthcare analytics, including patient flow optimization and predictive care models. Our healthcare solutions have reduced readmission rates by 22% and improved operational efficiency significantly.",
+      retail: "Our retail analytics solutions include demand forecasting, inventory optimization, and customer behavior analysis. We've helped retail chains reduce stockouts by 40% and increase customer satisfaction by 15%.",
+      manufacturing: "Our smart factory solutions include IoT integration, predictive maintenance, and production optimization. We've helped manufacturers increase overall equipment effectiveness by 35% and reduce downtime by 60%."
+    };
+
+    const lowerPrompt = userPrompt.toLowerCase();
+    let responseKey = 'default';
+    
+    if (lowerPrompt.includes('data') || lowerPrompt.includes('analytics')) responseKey = 'data';
+    else if (lowerPrompt.includes('ai') || lowerPrompt.includes('artificial intelligence') || lowerPrompt.includes('machine learning')) responseKey = 'ai';
+    else if (lowerPrompt.includes('healthcare') || lowerPrompt.includes('hospital') || lowerPrompt.includes('patient')) responseKey = 'healthcare';
+    else if (lowerPrompt.includes('retail') || lowerPrompt.includes('ecommerce') || lowerPrompt.includes('inventory')) responseKey = 'retail';
+    else if (lowerPrompt.includes('manufacturing') || lowerPrompt.includes('factory') || lowerPrompt.includes('production')) responseKey = 'manufacturing';
+
+    return responses[responseKey as keyof typeof responses];
+  };
+
+  const handleSubmit = async () => {
     if (!prompt.trim() && attachedFiles.length === 0) return;
     
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: prompt,
+      files: attachedFiles.length > 0 ? [...attachedFiles] : undefined,
+      timestamp: new Date()
+    };
+
+    if (showConversation) {
+      setMessages(prev => [...prev, userMessage]);
+      setIsTyping(true);
+    }
+
+    // Call external onSubmit if provided
     onSubmit?.(prompt, attachedFiles.map(af => af.file));
+    
+    const currentPrompt = prompt;
+    const currentFiles = [...attachedFiles];
+    
     setPrompt('');
     setAttachedFiles([]);
+
+    if (showConversation) {
+      // Generate AI response
+      setTimeout(async () => {
+        const responseContent = await generateResponse(currentPrompt, currentFiles);
+        
+        const assistantMessage: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: responseContent,
+          timestamp: new Date()
+        };
+
+        setMessages(prev => [...prev, assistantMessage]);
+        setIsTyping(false);
+      }, 1500);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -138,7 +210,91 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
   }, [prompt]);
 
   return (
-    <Card className={`w-full gradient-card border-border shadow-medium ${className}`}>
+    <div className={`w-full ${className}`}>
+      {/* Conversation History */}
+      {showConversation && messages.length > 0 && (
+        <Card className="mb-4 gradient-card border-border shadow-soft">
+          <CardContent className="p-4">
+            <div className="space-y-4 max-h-80 overflow-y-auto">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex items-start gap-3 ${
+                    message.role === 'user' ? 'flex-row-reverse' : ''
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    message.role === 'user' 
+                      ? 'bg-primary' 
+                      : 'bg-secondary'
+                  }`}>
+                    {message.role === 'user' ? (
+                      <User className="w-4 h-4 text-primary-foreground" />
+                    ) : (
+                      <Bot className="w-4 h-4 text-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <div
+                      className={`px-4 py-3 rounded-lg max-w-[85%] ${
+                        message.role === 'user'
+                          ? 'bg-primary text-primary-foreground ml-auto'
+                          : 'bg-secondary text-foreground'
+                      }`}
+                    >
+                      <p className="text-sm leading-relaxed">{message.content}</p>
+                    </div>
+                    {message.files && message.files.length > 0 && (
+                      <div className="flex flex-wrap gap-2 max-w-[85%]">
+                        {message.files.map((file) => (
+                          <div
+                            key={file.id}
+                            className="flex items-center gap-2 bg-background/50 rounded-lg p-2 text-xs"
+                          >
+                            {file.preview ? (
+                              <img 
+                                src={file.preview} 
+                                alt={file.file.name}
+                                className="w-6 h-6 rounded object-cover"
+                              />
+                            ) : (
+                              <div className="w-6 h-6 rounded bg-muted flex items-center justify-center">
+                                {getFileIcon(file.type)}
+                              </div>
+                            )}
+                            <span className="text-muted-foreground">{file.file.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      {message.timestamp.toLocaleTimeString()}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              
+              {isTyping && (
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-4 h-4 text-foreground" />
+                  </div>
+                  <div className="px-4 py-3 rounded-lg bg-secondary text-foreground">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Input Card */}
+      <Card className="gradient-card border-border shadow-medium">
       <CardContent className="p-4">
         {/* Attached Files */}
         {attachedFiles.length > 0 && (
@@ -284,5 +440,6 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
         />
       </CardContent>
     </Card>
+    </div>
   );
 };
