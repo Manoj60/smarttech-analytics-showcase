@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from './button';
 import { Card, CardContent } from './card';
 import { Textarea } from './textarea';
@@ -188,26 +189,25 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
   };
 
   const generateResponse = async (userPrompt: string, files: AttachedFile[]) => {
-    // Simulate AI response based on prompt content
-    const responses = {
-      default: "Thank you for your inquiry! Our team of AI and analytics experts would be happy to help you with your requirements. Based on your description, we can provide customized solutions that align with your business objectives.",
-      data: "Our data analytics solutions can help you unlock valuable insights from your data. We've helped companies achieve 40% cost reductions and 350% ROI through our AI-powered platforms.",
-      ai: "Our AI solutions include machine learning models, predictive analytics, and automation systems. We've successfully implemented AI solutions that have improved efficiency by up to 60% for our clients.",
-      healthcare: "We have extensive experience in healthcare analytics, including patient flow optimization and predictive care models. Our healthcare solutions have reduced readmission rates by 22% and improved operational efficiency significantly.",
-      retail: "Our retail analytics solutions include demand forecasting, inventory optimization, and customer behavior analysis. We've helped retail chains reduce stockouts by 40% and increase customer satisfaction by 15%.",
-      manufacturing: "Our smart factory solutions include IoT integration, predictive maintenance, and production optimization. We've helped manufacturers increase overall equipment effectiveness by 35% and reduce downtime by 60%."
-    };
+    try {
+      // Call the AI query assistant edge function
+      const { data, error } = await supabase.functions.invoke('ai-query-assistant', {
+        body: {
+          query: userPrompt,
+          files: files.map(f => f.file.name)
+        }
+      });
 
-    const lowerPrompt = userPrompt.toLowerCase();
-    let responseKey = 'default';
-    
-    if (lowerPrompt.includes('data') || lowerPrompt.includes('analytics')) responseKey = 'data';
-    else if (lowerPrompt.includes('ai') || lowerPrompt.includes('artificial intelligence') || lowerPrompt.includes('machine learning')) responseKey = 'ai';
-    else if (lowerPrompt.includes('healthcare') || lowerPrompt.includes('hospital') || lowerPrompt.includes('patient')) responseKey = 'healthcare';
-    else if (lowerPrompt.includes('retail') || lowerPrompt.includes('ecommerce') || lowerPrompt.includes('inventory')) responseKey = 'retail';
-    else if (lowerPrompt.includes('manufacturing') || lowerPrompt.includes('factory') || lowerPrompt.includes('production')) responseKey = 'manufacturing';
+      if (error) {
+        console.error('Edge function error:', error);
+        return "I apologize, but I'm experiencing technical difficulties. Please try again later or contact our support team for assistance.";
+      }
 
-    return responses[responseKey as keyof typeof responses];
+      return data.response || "Thank you for your inquiry! Our team would be happy to help you with your requirements.";
+    } catch (error) {
+      console.error('Error calling AI assistant:', error);
+      return "Thank you for your inquiry! Our team of AI and analytics experts would be happy to help you with your requirements. Based on your description, we can provide customized solutions that align with your business objectives.";
+    }
   };
 
   const handleSubmit = async () => {
