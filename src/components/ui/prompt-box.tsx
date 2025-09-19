@@ -48,6 +48,7 @@ interface PromptBoxProps {
   allowedFileTypes?: string[];
   className?: string;
   showConversation?: boolean;
+  onClose?: () => void;
 }
 
 export const PromptBox: React.FC<PromptBoxProps> = ({
@@ -56,7 +57,8 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
   maxFiles = 5,
   allowedFileTypes = ['image/*', '.pdf', '.doc', '.docx', '.txt'],
   className = '',
-  showConversation = true
+  showConversation = true,
+  onClose
 }) => {
   const [prompt, setPrompt] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
@@ -64,6 +66,8 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
   const [isTyping, setIsTyping] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
+  const [playingVoice, setPlayingVoice] = useState<string | null>(null);
+  const [isMinimized, setIsMinimized] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -154,11 +158,23 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
     ));
   };
 
-  const handleVoiceMessage = (content: string) => {
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(content);
-      utterance.rate = 0.8;
-      speechSynthesis.speak(utterance);
+  const handleVoiceMessage = (messageId: string, content: string) => {
+    if (playingVoice === messageId) {
+      // Stop current speech
+      speechSynthesis.cancel();
+      setPlayingVoice(null);
+    } else {
+      // Stop any current speech and start new one
+      speechSynthesis.cancel();
+      
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(content);
+        utterance.rate = 0.8;
+        utterance.onstart = () => setPlayingVoice(messageId);
+        utterance.onend = () => setPlayingVoice(null);
+        utterance.onerror = () => setPlayingVoice(null);
+        speechSynthesis.speak(utterance);
+      }
     }
   };
 
@@ -273,8 +289,55 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Conversation History */}
-      {showConversation && messages.length > 0 && (
+      {/* Header with close button */}
+      {(showConversation || onClose) && (
+        <div className="flex items-center justify-between mb-4">
+          {showConversation && (
+            <h3 className="text-lg font-semibold text-foreground">AI Assistant</h3>
+          )}
+          <div className="flex items-center gap-2">
+            {isMinimized ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMinimized(false)}
+                className="h-8 w-8 p-0"
+                title="Expand"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                </svg>
+              </Button>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMinimized(true)}
+                className="h-8 w-8 p-0"
+                title="Minimize"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                </svg>
+              </Button>
+            )}
+            {onClose && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                className="h-8 w-8 p-0"
+                title="Close"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Conversation History - Hidden when minimized */}
+      {showConversation && !isMinimized && messages.length > 0 && (
         <Card className="mb-4 gradient-card border-border shadow-soft">
           <CardContent className="p-4">
             <div className="space-y-4 max-h-80 overflow-y-auto">
@@ -327,9 +390,11 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleVoiceMessage(message.content)}
-                          className="h-8 w-8 p-0 hover:bg-secondary/80"
-                          title="Read aloud"
+                          onClick={() => handleVoiceMessage(message.id, message.content)}
+                          className={`h-8 w-8 p-0 hover:bg-secondary/80 ${
+                            playingVoice === message.id ? 'text-primary bg-primary/10' : ''
+                          }`}
+                          title={playingVoice === message.id ? "Stop reading" : "Read aloud"}
                         >
                           <Volume2 className="w-3 h-3" />
                         </Button>
@@ -428,8 +493,9 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
         </Card>
       )}
 
-      {/* Input Card */}
-      <Card className="gradient-card border-border shadow-medium">
+      {/* Input Card - Always visible unless completely closed */}
+      {!isMinimized && (
+        <Card className="gradient-card border-border shadow-medium">
       <CardContent className="p-4">
         {/* Attached Files */}
         {attachedFiles.length > 0 && (
@@ -575,6 +641,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
         />
       </CardContent>
     </Card>
+      )}
     </div>
   );
 };

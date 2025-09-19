@@ -98,6 +98,10 @@ const CaseStudies = () => {
                 console.log('Files:', files);
                 // Handle submission here
               }}
+              onClose={() => {
+                console.log('Prompt box closed');
+                // Handle close action - could hide the section or redirect
+              }}
             />
           </div>
         </div>
