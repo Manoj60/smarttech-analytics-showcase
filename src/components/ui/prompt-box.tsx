@@ -307,7 +307,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
         <Card className="mb-4 gradient-card border-border shadow-soft">
           <CardContent className="p-4">
             <div className="flex justify-between items-center mb-4">
-              <h4 className="text-sm font-medium text-foreground">Chit Chat</h4>
+              <h4 className="text-sm font-medium text-foreground">Chitchat</h4>
               <Button
                 variant="ghost"
                 size="sm"
