@@ -289,52 +289,6 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
 
   return (
     <div className={`w-full ${className}`}>
-      {/* Header with close button */}
-      {(showConversation || onClose) && (
-        <div className="flex items-center justify-between mb-4">
-          {showConversation && (
-            <h3 className="text-lg font-semibold text-foreground">AI Assistant</h3>
-          )}
-          <div className="flex items-center gap-2">
-            {isMinimized ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMinimized(false)}
-                className="h-8 w-8 p-0"
-                title="Expand"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-              </Button>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMinimized(true)}
-                className="h-8 w-8 p-0"
-                title="Minimize"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                </svg>
-              </Button>
-            )}
-            {onClose && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="h-8 w-8 p-0"
-                title="Close"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Conversation History - Hidden when minimized */}
       {showConversation && !isMinimized && messages.length > 0 && (
