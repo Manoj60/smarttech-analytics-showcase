@@ -67,7 +67,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState<string | null>(null);
   const [playingVoice, setPlayingVoice] = useState<string | null>(null);
-  const [isMinimized, setIsMinimized] = useState(false);
+  const [showConversationView, setShowConversationView] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -226,6 +226,17 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
     }
   };
 
+  const handleConversationClose = () => {
+    setShowConversationView(false);
+    setMessages([]);
+  };
+
+  const handlePromptFocus = () => {
+    if (!showConversationView && (messages.length > 0 || prompt.trim())) {
+      setShowConversationView(true);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!prompt.trim() && attachedFiles.length === 0) return;
     
@@ -240,6 +251,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
     if (showConversation) {
       setMessages(prev => [...prev, userMessage]);
       setIsTyping(true);
+      setShowConversationView(true);
     }
 
     // Call external onSubmit if provided
@@ -290,10 +302,22 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
   return (
     <div className={`w-full ${className}`}>
 
-      {/* Conversation History - Hidden when minimized */}
-      {showConversation && !isMinimized && messages.length > 0 && (
+      {/* Conversation History with Close Button */}
+      {showConversation && showConversationView && messages.length > 0 && (
         <Card className="mb-4 gradient-card border-border shadow-soft">
           <CardContent className="p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-sm font-medium text-foreground">Conversation</h4>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleConversationClose}
+                className="h-6 w-6 p-0"
+                title="Close conversation"
+              >
+                <X className="w-3 h-3" />
+              </Button>
+            </div>
             <div className="space-y-4 max-h-80 overflow-y-auto">
               {messages.map((message) => (
                 <div
@@ -447,9 +471,8 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
         </Card>
       )}
 
-      {/* Input Card - Always visible unless completely closed */}
-      {!isMinimized && (
-        <Card className="gradient-card border-border shadow-medium">
+      {/* Input Card - Always visible */}
+      <Card className="gradient-card border-border shadow-medium">
       <CardContent className="p-4">
         {/* Attached Files */}
         {attachedFiles.length > 0 && (
@@ -507,6 +530,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={handlePromptFocus}
               placeholder={placeholder}
               className="min-h-[60px] max-h-[120px] resize-none pr-24 border-border focus:ring-primary"
               style={{ height: 'auto' }}
@@ -595,7 +619,6 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
         />
       </CardContent>
     </Card>
-      )}
     </div>
   );
 };
