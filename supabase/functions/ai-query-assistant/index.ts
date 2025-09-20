@@ -28,9 +28,9 @@ serve(async (req) => {
       );
     }
 
-    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-    if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+    const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
+    if (!deepseekApiKey) {
+      throw new Error('DeepSeek API key not configured');
     }
 
     // Initialize Supabase client
@@ -56,7 +56,7 @@ serve(async (req) => {
     console.log('Context gathered:', fullContext);
 
     // Generate AI response
-    const aiResponse = await generateAIResponse(openAIApiKey, query, fullContext);
+    const aiResponse = await generateAIResponse(deepseekApiKey, query, fullContext);
 
     return new Response(
       JSON.stringify({ 
@@ -257,14 +257,14 @@ Always maintain a professional but approachable tone, and focus on how Smart Tec
 
   const contextString = JSON.stringify(context, null, 2);
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'gpt-4o-mini',
+      model: 'deepseek-chat',
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `Context from website and database: ${contextString}\n\nUser Query: ${query}` }
@@ -275,7 +275,7 @@ Always maintain a professional but approachable tone, and focus on how Smart Tec
   });
 
   if (!response.ok) {
-    throw new Error(`OpenAI API error: ${response.statusText}`);
+    throw new Error(`DeepSeek API error: ${response.statusText}`);
   }
 
   const data = await response.json();
