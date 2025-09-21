@@ -31,6 +31,9 @@ interface AttachedFile {
   file: File;
   type: 'image' | 'document' | 'other';
   preview?: string;
+  extractedText?: string;
+  isProcessing?: boolean;
+  processingError?: string;
 }
 
 interface ChatMessage {
@@ -87,16 +90,19 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
     }
   };
 
-  const handleFileSelect = (files: FileList) => {
+  const handleFileSelect = async (files: FileList) => {
     const newFiles: AttachedFile[] = [];
     
-    Array.from(files).slice(0, maxFiles - attachedFiles.length).forEach(file => {
+    for (const file of Array.from(files).slice(0, maxFiles - attachedFiles.length)) {
       const fileType = getFileType(file);
       const attachedFile: AttachedFile = {
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         file,
-        type: fileType
+        type: fileType,
+        isProcessing: true
       };
+
+      newFiles.push(attachedFile);
 
       // Create preview for images
       if (fileType === 'image') {
@@ -108,8 +114,9 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
         reader.readAsDataURL(file);
       }
 
-      newFiles.push(attachedFile);
-    });
+      // Start text extraction process
+      extractTextFromFile(attachedFile);
+    }
 
     setAttachedFiles(prev => [...prev, ...newFiles]);
   };
@@ -222,13 +229,76 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
     }, 1000);
   };
 
-  const generateResponse = async (userPrompt: string, files: AttachedFile[]) => {
+  const extractTextFromFile = async (attachedFile: AttachedFile) => {
     try {
+      const { file } = attachedFile;
+      let extractedText = '';
+
+      // Handle different file types
+      if (file.type.startsWith('text/') || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
+        // Simple text files - read directly
+        const text = await file.text();
+        extractedText = text;
+      } else {
+        // Documents and images - prepare FormData for edge function
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        // Documents and images - use Supabase edge function
+        const { data, error } = await supabase.functions.invoke('parse-document', {
+          body: formData
+        });
+        
+        if (error) {
+          console.error('Parse document error:', error);
+          extractedText = 'Could not extract text from file';
+        } else {
+          extractedText = data?.text || 'No text found in file';
+        }
+      }
+
+      // Update the file with extracted text
+      setAttachedFiles(prev => prev.map(f => 
+        f.id === attachedFile.id 
+          ? { ...f, extractedText, isProcessing: false }
+          : f
+      ));
+
+    } catch (error) {
+      console.error('Error extracting text from file:', error);
+      setAttachedFiles(prev => prev.map(f => 
+        f.id === attachedFile.id 
+          ? { ...f, processingError: 'Failed to extract text', isProcessing: false }
+          : f
+      ));
+    }
+  };
+
+  const generateResponse = async (userPrompt: string, files: AttachedFile[]): Promise<string> => {
+    try {
+      // Combine user prompt with extracted text from files
+      let enhancedPrompt = userPrompt;
+      
+      if (files.length > 0) {
+        const fileTexts = files
+          .filter(f => f.extractedText && !f.processingError)
+          .map(f => `\n\n--- Content from ${f.file.name} ---\n${f.extractedText}`)
+          .join('');
+        
+        if (fileTexts) {
+          enhancedPrompt += fileTexts;
+        }
+      }
+
       // Call the AI query assistant edge function
       const { data, error } = await supabase.functions.invoke('ai-query-assistant', {
         body: {
-          query: userPrompt,
-          files: files.map(f => f.file.name)
+          query: enhancedPrompt,
+          files: files.map(f => ({
+            name: f.file.name,
+            type: f.file.type,
+            hasText: !!f.extractedText
+          }))
         }
       });
 
@@ -283,18 +353,21 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
 
     if (showConversation) {
       // Generate AI response
-      setTimeout(async () => {
-        const responseContent = await generateResponse(currentPrompt, currentFiles);
-        
-        const assistantMessage: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          role: 'assistant',
-          content: responseContent,
-          timestamp: new Date()
-        };
+      setTimeout(() => {
+        generateResponse(currentPrompt, currentFiles).then((responseContent) => {
+          const assistantMessage: ChatMessage = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: responseContent,
+            timestamp: new Date()
+          };
 
-        setMessages(prev => [...prev, assistantMessage]);
-        setIsTyping(false);
+          setMessages(prev => [...prev, assistantMessage]);
+          setIsTyping(false);
+        }).catch((error) => {
+          console.error('Error generating response:', error);
+          setIsTyping(false);
+        });
       }, 1500);
     }
   };
