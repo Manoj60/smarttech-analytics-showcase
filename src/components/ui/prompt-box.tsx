@@ -5,6 +5,7 @@ import { Card, CardContent } from './card';
 import { Textarea } from './textarea';
 import { Badge } from './badge';
 import { VoiceInput } from './voice-input';
+import { EmojiPicker } from './emoji-picker';
 import { 
   Send, 
   Paperclip, 
@@ -157,6 +158,13 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
         ? { ...msg, rating: msg.rating === rating ? null : rating }
         : msg
     ));
+  };
+
+  const handleEmojiSelect = (emoji: string) => {
+    setPrompt(prev => prev + emoji);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
   };
 
   const handleVoiceInput = (transcribedText: string) => {
@@ -559,14 +567,11 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
                 <Paperclip className="w-4 h-4" />
               </Button>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2 h-auto hover:bg-secondary"
-                title="Add emoji"
-              >
-                <Smile className="w-4 h-4" />
-              </Button>
+              <EmojiPicker
+                onEmojiSelect={handleEmojiSelect}
+                disabled={isTyping}
+                className=""
+              />
               
               <VoiceInput
                 onTranscription={handleVoiceInput}
