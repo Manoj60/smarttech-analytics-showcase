@@ -4,6 +4,7 @@ import { Button } from './button';
 import { Card, CardContent } from './card';
 import { Textarea } from './textarea';
 import { Badge } from './badge';
+import { VoiceInput } from './voice-input';
 import { 
   Send, 
   Paperclip, 
@@ -156,6 +157,15 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
         ? { ...msg, rating: msg.rating === rating ? null : rating }
         : msg
     ));
+  };
+
+  const handleVoiceInput = (transcribedText: string) => {
+    if (transcribedText.trim()) {
+      setPrompt(prev => prev + (prev ? ' ' : '') + transcribedText.trim());
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }
   };
 
   const handleVoiceMessage = (messageId: string, content: string) => {
@@ -558,14 +568,11 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
                 <Smile className="w-4 h-4" />
               </Button>
               
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2 h-auto hover:bg-secondary"
-                title="Voice input"
-              >
-                <Mic className="w-4 h-4" />
-              </Button>
+              <VoiceInput
+                onTranscription={handleVoiceInput}
+                disabled={isTyping}
+                className="p-2 h-auto"
+              />
             </div>
           </div>
 
