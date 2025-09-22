@@ -146,27 +146,7 @@ ${msg.content}
 
   return (
     <div className="space-y-2">
-      <div className="flex gap-2">
-        <Button
-          onClick={exportToText}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-1"
-        >
-          <FileText className="h-3 w-3" />
-          Export TXT
-        </Button>
-        <Button
-          onClick={exportToJSON}
-          variant="outline"
-          size="sm"
-          className="flex items-center gap-1"
-        >
-          <Download className="h-3 w-3" />
-          Export JSON
-        </Button>
-      </div>
-      
+      {/* Sharing options - always available */}
       <div className="flex gap-2">
         <Button
           onClick={shareToLinkedIn}
@@ -213,6 +193,35 @@ ${msg.content}
           Share
         </Button>
       </div>
+      
+      {/* Export options - for registered users only */}
+      {(() => {
+        // Check if user has export permissions by checking if userEmail suggests they're registered
+        const hasExportPermissions = userEmail && userEmail.includes('@') && userEmail !== 'guest@example.com';
+        
+        return hasExportPermissions ? (
+          <div className="flex gap-2">
+            <Button
+              onClick={exportToText}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+            >
+              <FileText className="h-3 w-3" />
+              Export TXT
+            </Button>
+            <Button
+              onClick={exportToJSON}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-1"
+            >
+              <Download className="h-3 w-3" />
+              Export JSON
+            </Button>
+          </div>
+        ) : null;
+      })()}
     </div>
   );
 };

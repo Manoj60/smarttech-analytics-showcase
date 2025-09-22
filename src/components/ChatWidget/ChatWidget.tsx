@@ -544,7 +544,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
                   {/* Advanced options panel */}
                   {showAdvancedOptions && (
                     <div className="border-t pt-2 space-y-2">
-                      {canExportConversations(userRole) && conversationId && (
+                      {conversationId && (
                         <ConversationExporter
                           messages={messages}
                           userName={userInfo.name}
@@ -554,7 +554,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
                       )}
                       {!canExportConversations(userRole) && (
                         <p className="text-xs text-muted-foreground">
-                          Export features available for registered users
+                          File export features available for registered users
                         </p>
                       )}
                     </div>
