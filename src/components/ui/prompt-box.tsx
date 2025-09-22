@@ -4,6 +4,7 @@ import { Button } from './button';
 import { Card, CardContent } from './card';
 import { Textarea } from './textarea';
 import { Badge } from './badge';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from './dropdown-menu';
 import { VoiceInput } from './voice-input';
 import { EmojiPicker } from './emoji-picker';
 import { 
@@ -23,7 +24,9 @@ import {
   ThumbsDown,
   MoreHorizontal,
   Share2,
-  Check
+  Check,
+  Linkedin,
+  Facebook
 } from 'lucide-react';
 
 interface AttachedFile {
@@ -203,14 +206,35 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
     }
   };
 
+  const buildShareText = (content: string) => {
+    const excerpt = content.length > 220 ? content.slice(0, 217) + '...' : content;
+    return `Insight from Smart Tech Analytics' AI assistant: ${excerpt}`;
+  };
+
+  const handleShareLinkedIn = (content: string) => {
+    const text = buildShareText(content);
+    const url = window.location.href;
+    const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+    window.open(linkedInUrl, '_blank', 'width=600,height=600');
+  };
+
+  const handleShareFacebook = (content: string) => {
+    const text = buildShareText(content);
+    const url = window.location.href;
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
+    window.open(facebookUrl, '_blank', 'width=600,height=600');
+  };
+
   const handleShareMessage = (content: string) => {
     if (navigator.share) {
       navigator.share({
-        title: 'AI Response',
-        text: content,
+        title: "Smart Tech Analytics AI Response",
+        text: buildShareText(content),
+        url: window.location.href,
       });
     } else {
-      handleCopyMessage('share', content);
+      // Fallback: copy text to clipboard
+      handleCopyMessage('share', buildShareText(content) + ' ' + window.location.href);
     }
   };
 
@@ -502,15 +526,32 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
                           <MoreHorizontal className="w-3 h-3" />
                         </Button>
                         
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleShareMessage(message.content)}
-                          className="h-8 w-8 p-0 hover:bg-secondary/80"
-                          title="Share"
-                        >
-                          <Share2 className="w-3 h-3" />
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0 hover:bg-secondary/80"
+                              title="Share"
+                            >
+                              <Share2 className="w-3 h-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem onClick={() => handleShareLinkedIn(message.content)} className="flex items-center gap-2">
+                              <Linkedin className="w-3 h-3" />
+                              Share to LinkedIn
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleShareFacebook(message.content)} className="flex items-center gap-2">
+                              <Facebook className="w-3 h-3" />
+                              Share to Facebook
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleShareMessage(message.content)} className="flex items-center gap-2">
+                              <Share2 className="w-3 h-3" />
+                              Native Share / Copy
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     )}
                     {message.files && message.files.length > 0 && (
