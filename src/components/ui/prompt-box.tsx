@@ -213,28 +213,49 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
 
   const handleShareLinkedIn = (content: string) => {
     const text = buildShareText(content);
-    const url = window.location.href;
+    const url = window.location.origin;
     const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
-    window.open(linkedInUrl, '_blank', 'width=600,height=600');
+    
+    try {
+      window.open(linkedInUrl, '_blank', 'width=600,height=600,scrollbars=yes,resizable=yes');
+    } catch (error) {
+      console.error('LinkedIn sharing failed:', error);
+      handleCopyMessage('share', `${text} - ${url}`);
+    }
   };
 
   const handleShareFacebook = (content: string) => {
     const text = buildShareText(content);
-    const url = window.location.href;
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
-    window.open(facebookUrl, '_blank', 'width=600,height=600');
+    const url = window.location.origin;
+    // Use Facebook's simpler sharing URL that's more likely to work
+    const facebookUrl = `https://www.facebook.com/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
+    
+    try {
+      window.open(facebookUrl, '_blank', 'width=600,height=600,scrollbars=yes,resizable=yes');
+    } catch (error) {
+      console.error('Facebook sharing failed:', error);
+      // Fallback: copy to clipboard
+      handleCopyMessage('share', `${text} - ${url}`);
+    }
   };
 
   const handleShareMessage = (content: string) => {
-    if (navigator.share) {
-      navigator.share({
-        title: "Smart Tech Analytics AI Response",
-        text: buildShareText(content),
-        url: window.location.href,
+    const shareData = {
+      title: "Smart Tech Analytics AI Response",
+      text: buildShareText(content),
+      url: window.location.origin,
+    };
+
+    // Check if Web Share API is available and supported
+    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+      navigator.share(shareData).catch((error) => {
+        console.error('Native sharing failed:', error);
+        // Fallback to copy
+        handleCopyMessage('share', `${shareData.text} - ${shareData.url}`);
       });
     } else {
       // Fallback: copy text to clipboard
-      handleCopyMessage('share', buildShareText(content) + ' ' + window.location.href);
+      handleCopyMessage('share', `${shareData.text} - ${shareData.url}`);
     }
   };
 
