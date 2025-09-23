@@ -341,7 +341,8 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
           files: files.map(f => ({
             name: f.file.name,
             type: f.file.type,
-            hasText: !!f.extractedText
+            hasText: !!f.extractedText,
+            extractedText: f.extractedText
           }))
         }
       });

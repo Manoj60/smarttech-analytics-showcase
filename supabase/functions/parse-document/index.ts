@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -19,6 +21,8 @@ serve(async (req) => {
       throw new Error('No file provided')
     }
 
+    console.log(`Processing file: ${file.name}, type: ${file.type}, size: ${file.size}`)
+
     // Convert file to ArrayBuffer for processing
     const buffer = await file.arrayBuffer()
     const uint8Array = new Uint8Array(buffer)
@@ -29,23 +33,103 @@ serve(async (req) => {
     if (file.type.startsWith('text/') || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
       // Simple text files
       extractedText = new TextDecoder().decode(uint8Array)
+      console.log(`Extracted ${extractedText.length} characters from text file`)
     } else if (file.type.startsWith('image/')) {
-      // For images, we'll use a simple OCR approach
-      // In a real implementation, you might want to use Tesseract.js or similar
-      extractedText = `Image file: ${file.name}. For detailed OCR, please use a specialized service.`
+      // For images, use GPT-4o-mini for vision analysis
+      if (!openAIApiKey) {
+        extractedText = `Image file: ${file.name}. Unable to analyze - OpenAI API key not configured.`
+      } else {
+        try {
+          const base64Image = btoa(String.fromCharCode(...uint8Array))
+          const mimeType = file.type || 'image/jpeg'
+          
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [
+                {
+                  role: 'user',
+                  content: [
+                    {
+                      type: 'text',
+                      text: 'Analyze this image and extract all visible text, describe the content, identify key information, data, charts, or relevant details. Provide a comprehensive description that would be useful for business analysis or consultation purposes.'
+                    },
+                    {
+                      type: 'image_url',
+                      image_url: {
+                        url: `data:${mimeType};base64,${base64Image}`
+                      }
+                    }
+                  ]
+                }
+              ],
+              max_tokens: 1000
+            }),
+          })
+
+          if (response.ok) {
+            const data = await response.json()
+            extractedText = data.choices[0].message.content
+            console.log(`Successfully analyzed image with AI: ${extractedText.length} characters`)
+          } else {
+            const error = await response.text()
+            console.error('OpenAI API error:', error)
+            extractedText = `Image file: ${file.name}. Analysis failed: ${error}`
+          }
+        } catch (error) {
+          console.error('Error analyzing image:', error)
+          extractedText = `Image file: ${file.name}. Error during analysis: ${error.message}`
+        }
+      }
     } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-      // PDF files - simplified text extraction
-      extractedText = `PDF document: ${file.name}. Content extracted: [PDF parsing would happen here with a proper PDF library]`
+      // For PDFs, we'll try to extract basic text or use AI for analysis
+      if (!openAIApiKey) {
+        extractedText = `PDF document: ${file.name}. Unable to analyze - OpenAI API key not configured.`
+      } else {
+        try {
+          // Convert PDF to base64 and try to get GPT to analyze it
+          const base64Pdf = btoa(String.fromCharCode(...uint8Array))
+          extractedText = `PDF document: ${file.name} (${(file.size / 1024).toFixed(1)}KB). Content analysis would require specialized PDF parsing. Please provide key information about this document for better assistance.`
+        } catch (error) {
+          extractedText = `PDF document: ${file.name}. Error processing: ${error.message}`
+        }
+      }
     } else if (file.type.includes('officedocument') || file.name.endsWith('.docx') || file.name.endsWith('.xlsx') || file.name.endsWith('.pptx')) {
       // Office documents
-      extractedText = `Office document: ${file.name}. Content would be extracted with appropriate parsing library.`
+      extractedText = `Office document: ${file.name} (${(file.size / 1024).toFixed(1)}KB). Document type: ${file.type}. For detailed analysis, please describe the content or share key sections as text.`
+    } else if (file.type.startsWith('application/json')) {
+      // JSON files
+      try {
+        const jsonContent = new TextDecoder().decode(uint8Array)
+        const parsed = JSON.parse(jsonContent)
+        extractedText = `JSON file: ${file.name}\nStructured data containing: ${Object.keys(parsed).join(', ')}\nContent: ${jsonContent.substring(0, 2000)}${jsonContent.length > 2000 ? '...' : ''}`
+      } catch (error) {
+        extractedText = `JSON file: ${file.name}. Error parsing: ${error.message}`
+      }
+    } else if (file.type.startsWith('text/csv') || file.name.endsWith('.csv')) {
+      // CSV files
+      const csvContent = new TextDecoder().decode(uint8Array)
+      const lines = csvContent.split('\n').slice(0, 10) // First 10 lines
+      extractedText = `CSV file: ${file.name}\nHeaders and sample data:\n${lines.join('\n')}\n${csvContent.split('\n').length > 10 ? `... and ${csvContent.split('\n').length - 10} more rows` : ''}`
     } else {
       // Fallback for other file types
-      extractedText = `File: ${file.name} (${file.type}). Binary file detected - text extraction not available for this format.`
+      extractedText = `File: ${file.name} (${file.type}, ${(file.size / 1024).toFixed(1)}KB). This file type is not directly supported for content extraction. Please describe what information you'd like me to help you with regarding this file.`
     }
 
+    console.log(`Final extracted text length: ${extractedText.length}`)
+
     return new Response(
-      JSON.stringify({ text: extractedText }),
+      JSON.stringify({ 
+        text: extractedText,
+        fileName: file.name,
+        fileType: file.type,
+        fileSize: file.size
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 

@@ -9,7 +9,12 @@ const corsHeaders = {
 
 interface QueryRequest {
   query: string;
-  files?: string[];
+  files?: Array<{
+    name: string;
+    type: string;
+    hasText: boolean;
+    extractedText?: string;
+  }>;
 }
 
 serve(async (req) => {
@@ -244,6 +249,7 @@ Your role is to:
 - Provide helpful information about AI and analytics solutions
 - Guide users toward relevant services based on their needs
 - Be professional, knowledgeable, and helpful
+- Analyze documents and images shared by users to provide relevant insights and recommendations
 
 Company Overview:
 Smart Tech Analytics specializes in AI-powered solutions including demand forecasting, predictive analytics, smart factory optimization, and business intelligence across industries like healthcare, retail, manufacturing, finance, and more.
@@ -251,11 +257,32 @@ Smart Tech Analytics specializes in AI-powered solutions including demand foreca
 Key Leadership:
 - Samikshya Adhikari: Head of Health Services with over a decade of hospital experience including burn and critical care services
 
+When users share files (documents, images, data):
+- Analyze the content carefully and extract key insights
+- Relate the content to relevant Smart Tech Analytics services
+- Provide specific recommendations based on the file content
+- Identify potential business challenges and how the company can address them
+- If the file contains data, charts, or business information, provide analytical insights
+
 Use the provided context to give accurate, specific answers. If you don't have specific information, provide general guidance about how the company can help and suggest contacting the team for detailed consultation.
 
 Always maintain a professional but approachable tone, and focus on how Smart Tech Analytics can solve the user's business challenges.`;
 
   const contextString = JSON.stringify(context, null, 2);
+  
+  // Build enhanced query with file content
+  let enhancedQuery = `Context from website and database: ${contextString}\n\nUser Query: ${query}`;
+  
+  // Add file content if available
+  if (context.files && context.files.length > 0) {
+    enhancedQuery += '\n\nFile Content Analysis:';
+    context.files.forEach((file: any, index: number) => {
+      if (file.extractedText) {
+        enhancedQuery += `\n\nFile ${index + 1}: ${file.name} (${file.type})\nContent: ${file.extractedText}`;
+      }
+    });
+    enhancedQuery += '\n\nPlease analyze the file content and provide relevant business insights and recommendations based on Smart Tech Analytics services.';
+  }
 
   const response = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
@@ -267,7 +294,7 @@ Always maintain a professional but approachable tone, and focus on how Smart Tec
       model: 'deepseek-chat',
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Context from website and database: ${contextString}\n\nUser Query: ${query}` }
+        { role: 'user', content: enhancedQuery }
       ],
       max_tokens: 1000,
       temperature: 0.7,
