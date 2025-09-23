@@ -22,11 +22,11 @@ import {
   Volume2,
   ThumbsUp,
   ThumbsDown,
-  MoreHorizontal,
   Share2,
   Check,
   Linkedin,
-  Facebook
+  Facebook,
+  RefreshCw
 } from 'lucide-react';
 
 interface AttachedFile {
@@ -239,24 +239,28 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
     }
   };
 
-  const handleShareMessage = (content: string) => {
-    const shareData = {
-      title: "Smart Tech Analytics AI Response",
-      text: buildShareText(content),
-      url: window.location.origin,
-    };
-
-    // Check if Web Share API is available and supported
-    if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
-      navigator.share(shareData).catch((error) => {
-        console.error('Native sharing failed:', error);
-        // Fallback to copy
-        handleCopyMessage('share', `${shareData.text} - ${shareData.url}`);
-      });
-    } else {
-      // Fallback: copy text to clipboard
-      handleCopyMessage('share', `${shareData.text} - ${shareData.url}`);
+  const handleRefreshMessage = async (messageId: string, originalContent: string) => {
+    setIsTyping(true);
+    
+    // Find the original user message to regenerate from
+    const messageIndex = messages.findIndex(msg => msg.id === messageId);
+    const userMessage = messageIndex > 0 ? messages[messageIndex - 1] : null;
+    
+    if (userMessage && userMessage.role === 'user') {
+      try {
+        const refreshedResponse = await generateResponse(userMessage.content, userMessage.files || []);
+        
+        setMessages(prev => prev.map(msg => 
+          msg.id === messageId 
+            ? { ...msg, content: refreshedResponse }
+            : msg
+        ));
+      } catch (error) {
+        console.error('Error refreshing message:', error);
+      }
     }
+    
+    setIsTyping(false);
   };
 
   const generateMorePrecise = async (messageId: string, originalContent: string) => {
@@ -540,11 +544,11 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => generateMorePrecise(message.id, message.content)}
+                          onClick={() => handleRefreshMessage(message.id, message.content)}
                           className="h-8 w-8 p-0 hover:bg-secondary/80"
-                          title="More precise"
+                          title="Refresh response"
                         >
-                          <MoreHorizontal className="w-3 h-3" />
+                          <RefreshCw className="w-3 h-3" />
                         </Button>
                         
                         <DropdownMenu>
@@ -566,10 +570,6 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
                             <DropdownMenuItem onClick={() => handleShareFacebook(message.content)} className="flex items-center gap-2">
                               <Facebook className="w-3 h-3" />
                               Share to Facebook
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleShareMessage(message.content)} className="flex items-center gap-2">
-                              <Share2 className="w-3 h-3" />
-                              Native Share / Copy
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
