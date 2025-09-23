@@ -45,18 +45,29 @@ serve(async (req) => {
 
     console.log('Processing query:', query);
 
-    // Gather context from website content
-    const websiteContext = await gatherWebsiteContext(query);
+    // Only gather context if no files are provided
+    // When files are shared, focus only on file content
+    let fullContext;
     
-    // Gather context from database
-    const databaseContext = await gatherDatabaseContext(supabase, query);
-    
-    // Combine all context
-    const fullContext = {
-      website: websiteContext,
-      database: databaseContext,
-      files: files
-    };
+    if (files.length > 0) {
+      // File-only mode: only process file content
+      fullContext = {
+        files: files,
+        file_mode: true
+      };
+      console.log('File-only mode: Processing uploaded files without additional context');
+    } else {
+      // Normal mode: gather website and database context
+      const websiteContext = await gatherWebsiteContext(query);
+      const databaseContext = await gatherDatabaseContext(supabase, query);
+      
+      fullContext = {
+        website: websiteContext,
+        database: databaseContext,
+        files: files,
+        file_mode: false
+      };
+    }
 
     console.log('Context gathered:', fullContext);
 
@@ -66,10 +77,14 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         response: aiResponse,
-        context_used: {
-          website_sections: websiteContext.sections.length,
-          database_records: databaseContext.records_found,
-          files_provided: files.length
+        context_used: fullContext.file_mode ? {
+          files_provided: files.length,
+          mode: 'file_only'
+        } : {
+          website_sections: fullContext.website.sections.length,
+          database_records: fullContext.database.records_found,
+          files_provided: files.length,
+          mode: 'full_context'
         }
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -242,14 +257,47 @@ async function gatherDatabaseContext(supabase: any, query: string) {
 }
 
 async function generateAIResponse(apiKey: string, query: string, context: any) {
-  const systemPrompt = `You are an AI assistant for Smart Tech Analytics, a leading AI and analytics solutions company. 
+  let systemPrompt;
+  let enhancedQuery;
+  
+  if (context.file_mode) {
+    // File-only mode: Focus only on analyzing file content
+    systemPrompt = `You are an expert document and image analyst. Your role is to:
+
+- Analyze the content of uploaded files (documents, images, data) thoroughly
+- Extract key information, insights, and patterns from the content
+- Provide clear, actionable analysis of what you find
+- Focus solely on the file content without referencing external company information
+- Be comprehensive in your analysis of charts, graphs, text, or visual elements
+- Identify important data points, trends, or business insights from the content
+
+When analyzing files:
+- Describe what you see or read in detail
+- Extract all relevant text, numbers, and data points
+- Identify any patterns, trends, or insights
+- Summarize key findings and their potential implications
+- Be objective and focus on the actual content provided
+
+Respond with detailed analysis of the uploaded content only.`;
+
+    enhancedQuery = `User Query: ${query}\n\nAnalyze the following file content:`;
+    
+    if (context.files && context.files.length > 0) {
+      context.files.forEach((file: any, index: number) => {
+        if (file.extractedText) {
+          enhancedQuery += `\n\nFile ${index + 1}: ${file.name} (${file.type})\nContent: ${file.extractedText}`;
+        }
+      });
+    }
+  } else {
+    // Normal mode: Company context and services
+    systemPrompt = `You are an AI assistant for Smart Tech Analytics, a leading AI and analytics solutions company. 
 
 Your role is to:
 - Answer questions about the company's services, case studies, and expertise
 - Provide helpful information about AI and analytics solutions
 - Guide users toward relevant services based on their needs
 - Be professional, knowledgeable, and helpful
-- Analyze documents and images shared by users to provide relevant insights and recommendations
 
 Company Overview:
 Smart Tech Analytics specializes in AI-powered solutions including demand forecasting, predictive analytics, smart factory optimization, and business intelligence across industries like healthcare, retail, manufacturing, finance, and more.
@@ -257,31 +305,12 @@ Smart Tech Analytics specializes in AI-powered solutions including demand foreca
 Key Leadership:
 - Samikshya Adhikari: Head of Health Services with over a decade of hospital experience including burn and critical care services
 
-When users share files (documents, images, data):
-- Analyze the content carefully and extract key insights
-- Relate the content to relevant Smart Tech Analytics services
-- Provide specific recommendations based on the file content
-- Identify potential business challenges and how the company can address them
-- If the file contains data, charts, or business information, provide analytical insights
-
 Use the provided context to give accurate, specific answers. If you don't have specific information, provide general guidance about how the company can help and suggest contacting the team for detailed consultation.
 
 Always maintain a professional but approachable tone, and focus on how Smart Tech Analytics can solve the user's business challenges.`;
 
-  const contextString = JSON.stringify(context, null, 2);
-  
-  // Build enhanced query with file content
-  let enhancedQuery = `Context from website and database: ${contextString}\n\nUser Query: ${query}`;
-  
-  // Add file content if available
-  if (context.files && context.files.length > 0) {
-    enhancedQuery += '\n\nFile Content Analysis:';
-    context.files.forEach((file: any, index: number) => {
-      if (file.extractedText) {
-        enhancedQuery += `\n\nFile ${index + 1}: ${file.name} (${file.type})\nContent: ${file.extractedText}`;
-      }
-    });
-    enhancedQuery += '\n\nPlease analyze the file content and provide relevant business insights and recommendations based on Smart Tech Analytics services.';
+    const contextString = JSON.stringify(context, null, 2);
+    enhancedQuery = `Context from website and database: ${contextString}\n\nUser Query: ${query}`;
   }
 
   const response = await fetch('https://api.deepseek.com/chat/completions', {

@@ -40,7 +40,10 @@ serve(async (req) => {
         extractedText = `Image file: ${file.name}. Unable to analyze - OpenAI API key not configured.`
       } else {
         try {
-          const base64Image = btoa(String.fromCharCode(...uint8Array))
+          // Convert to base64 safely
+          const base64Image = btoa(
+            uint8Array.reduce((data, byte) => data + String.fromCharCode(byte), '')
+          )
           const mimeType = file.type || 'image/jpeg'
           
           const response = await fetch('https://api.openai.com/v1/chat/completions', {
