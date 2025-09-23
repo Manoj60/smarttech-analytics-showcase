@@ -227,16 +227,11 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
   const handleShareFacebook = (content: string) => {
     const text = buildShareText(content);
     const url = window.location.origin;
-    // Use Facebook's simpler sharing URL that's more likely to work
+    // Use Facebook's sharing URL and open in new tab instead of popup to avoid COOP issues
     const facebookUrl = `https://www.facebook.com/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`;
     
-    try {
-      window.open(facebookUrl, '_blank', 'width=600,height=600,scrollbars=yes,resizable=yes');
-    } catch (error) {
-      console.error('Facebook sharing failed:', error);
-      // Fallback: copy to clipboard
-      handleCopyMessage('share', `${text} - ${url}`);
-    }
+    // Open in new tab instead of popup to avoid Cross-Origin-Opener-Policy issues
+    window.open(facebookUrl, '_blank');
   };
 
   const handleRefreshMessage = async (messageId: string, originalContent: string) => {
