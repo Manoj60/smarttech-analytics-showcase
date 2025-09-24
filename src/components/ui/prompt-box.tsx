@@ -278,15 +278,20 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
       const { file } = attachedFile;
       let extractedText = '';
 
+      console.log(`Starting extraction for: ${file.name} (${file.type}, ${file.size} bytes)`);
+
       // Handle different file types
       if (file.type.startsWith('text/') || file.name.endsWith('.txt') || file.name.endsWith('.md')) {
         // Simple text files - read directly
         const text = await file.text();
         extractedText = text;
+        console.log(`Text file extracted: ${extractedText.length} characters`);
       } else {
         // Documents and images - prepare FormData for edge function
         const formData = new FormData();
         formData.append('file', file);
+        
+        console.log('Calling parse-document function...');
         
         // Documents and images - use Supabase edge function
         const { data, error } = await supabase.functions.invoke('parse-document', {
@@ -295,9 +300,13 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
         
         if (error) {
           console.error('Parse document error:', error);
-          extractedText = 'Could not extract text from file';
+          extractedText = `Error extracting content from ${file.name}: ${error.message || 'Unknown error'}`;
+        } else if (data?.text) {
+          extractedText = data.text;
+          console.log(`Document parsed successfully: ${extractedText.length} characters extracted`);
         } else {
-          extractedText = data?.text || 'No text found in file';
+          extractedText = `No readable content found in ${file.name}`;
+          console.log('No text content found in document');
         }
       }
 
@@ -308,11 +317,15 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
           : f
       ));
 
+      console.log(`Extraction completed for ${file.name}`);
+
     } catch (error) {
       console.error('Error extracting text from file:', error);
+      const errorMessage = `Failed to process ${attachedFile.file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      
       setAttachedFiles(prev => prev.map(f => 
         f.id === attachedFile.id 
-          ? { ...f, processingError: 'Failed to extract text', isProcessing: false }
+          ? { ...f, processingError: errorMessage, isProcessing: false }
           : f
       ));
     }

@@ -60,7 +60,7 @@ serve(async (req) => {
                   content: [
                     {
                       type: 'text',
-                      text: 'Analyze this image and extract all visible text, describe the content, identify key information, data, charts, or relevant details. Provide a comprehensive description that would be useful for business analysis or consultation purposes.'
+                      text: 'Extract and analyze this image content with maximum accuracy. Please provide: 1) All visible text word-for-word, 2) Detailed description of visual elements, charts, graphs, tables, 3) Key data points, numbers, statistics, 4) Business insights or important information, 5) Document structure and format details. Be comprehensive and precise in your extraction.'
                     },
                     {
                       type: 'image_url',
@@ -71,7 +71,7 @@ serve(async (req) => {
                   ]
                 }
               ],
-              max_tokens: 1000
+              max_tokens: 1500
             }),
           })
 
