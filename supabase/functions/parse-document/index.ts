@@ -178,9 +178,13 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error processing document:', error)
+    console.error('Error processing document:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: 'Document processing failed',
+        message: error.message,
+        text: `Error processing file: ${error.message}` 
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

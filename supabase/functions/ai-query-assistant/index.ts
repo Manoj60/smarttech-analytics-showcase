@@ -94,7 +94,8 @@ serve(async (req) => {
     console.error('Error in ai-query-assistant:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: 'Internal server error',
+        message: error.message,
         fallback_response: "I apologize, but I'm experiencing technical difficulties. Please try again later or contact our support team for assistance."
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -362,7 +362,7 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
 
       console.log('Processed files for AI:', processedFiles.length);
 
-      // Call the AI query assistant edge function
+      // Call the AI query assistant edge function with better error handling
       const { data, error } = await supabase.functions.invoke('ai-query-assistant', {
         body: {
           query: userPrompt,
@@ -372,10 +372,14 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
 
       if (error) {
         console.error('Edge function error:', error);
-        return "I apologize, but I'm experiencing technical difficulties. Please try again later or contact our support team for assistance.";
+        // Return a more informative error message
+        if (error.message?.includes('DeepSeek')) {
+          return "I apologize, but our AI service is temporarily unavailable. Please try again later or contact our support team for assistance.";
+        }
+        return "I'm experiencing technical difficulties processing your request. Please try again later.";
       }
 
-      return data.response || "Thank you for your inquiry! Our team would be happy to help you with your requirements.";
+      return data?.response || "Thank you for your inquiry! Our team would be happy to help you with your requirements.";
     } catch (error) {
       console.error('Error calling AI assistant:', error);
       return "Thank you for your inquiry! Our team of AI and analytics experts would be happy to help you with your requirements. Based on your description, we can provide customized solutions that align with your business objectives.";
