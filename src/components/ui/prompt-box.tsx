@@ -333,30 +333,40 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
 
   const generateResponse = async (userPrompt: string, files: AttachedFile[]): Promise<string> => {
     try {
-      // Combine user prompt with extracted text from files
-      let enhancedPrompt = userPrompt;
-      
-      if (files.length > 0) {
-        const fileTexts = files
-          .filter(f => f.extractedText && !f.processingError)
-          .map(f => `\n\n--- Content from ${f.file.name} ---\n${f.extractedText}`)
-          .join('');
-        
-        if (fileTexts) {
-          enhancedPrompt += fileTexts;
-        }
+      console.log('Generating response for prompt:', userPrompt);
+      console.log('Files:', files.map(f => ({
+        name: f.file.name,
+        type: f.file.type,
+        hasText: !!f.extractedText,
+        textLength: f.extractedText?.length || 0,
+        error: f.processingError
+      })));
+
+      // Wait for all files to finish processing
+      const allFilesProcessed = files.every(f => !f.isProcessing);
+      if (!allFilesProcessed) {
+        console.log('Some files still processing, waiting...');
+        // Wait a bit more for file processing to complete
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
+
+      // Prepare file data for the AI assistant
+      const processedFiles = files
+        .filter(f => f.extractedText && !f.processingError)
+        .map(f => ({
+          name: f.file.name,
+          type: f.file.type,
+          hasText: true,
+          extractedText: f.extractedText
+        }));
+
+      console.log('Processed files for AI:', processedFiles.length);
 
       // Call the AI query assistant edge function
       const { data, error } = await supabase.functions.invoke('ai-query-assistant', {
         body: {
-          query: enhancedPrompt,
-          files: files.map(f => ({
-            name: f.file.name,
-            type: f.file.type,
-            hasText: !!f.extractedText,
-            extractedText: f.extractedText
-          }))
+          query: userPrompt,
+          files: processedFiles
         }
       });
 
@@ -660,9 +670,20 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
                     <p className="text-sm font-medium text-foreground truncate">
                       {file.file.name}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {(file.file.size / 1024).toFixed(1)} KB
-                    </p>
+                    <div className="flex items-center gap-1">
+                      <p className="text-xs text-muted-foreground">
+                        {(file.file.size / 1024).toFixed(1)} KB
+                      </p>
+                      {file.isProcessing && (
+                        <Badge variant="outline" className="text-xs h-4">Processing...</Badge>
+                      )}
+                      {file.extractedText && (
+                        <Badge variant="secondary" className="text-xs h-4">✓ Extracted</Badge>
+                      )}
+                      {file.processingError && (
+                        <Badge variant="destructive" className="text-xs h-4">Error</Badge>
+                      )}
+                    </div>
                   </div>
                   <Button
                     variant="ghost"

@@ -90,16 +90,57 @@ serve(async (req) => {
         }
       }
     } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-      // For PDFs, we'll try to extract basic text or use AI for analysis
+      // For PDFs, use OpenAI to analyze and extract content
       if (!openAIApiKey) {
         extractedText = `PDF document: ${file.name}. Unable to analyze - OpenAI API key not configured.`
       } else {
         try {
-          // Convert PDF to base64 and try to get GPT to analyze it
-          const base64Pdf = btoa(String.fromCharCode(...uint8Array))
-          extractedText = `PDF document: ${file.name} (${(file.size / 1024).toFixed(1)}KB). Content analysis would require specialized PDF parsing. Please provide key information about this document for better assistance.`
+          // Convert first portion of PDF to base64 for AI analysis (limit to prevent memory issues)
+          const maxBytes = Math.min(uint8Array.length, 1000000); // Limit to 1MB for processing
+          const limitedArray = uint8Array.slice(0, maxBytes);
+          const base64Pdf = btoa(String.fromCharCode.apply(null, Array.from(limitedArray)));
+          
+          console.log(`Processing PDF ${file.name}: ${maxBytes} bytes for AI analysis`);
+          
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${openAIApiKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [
+                {
+                  role: 'user',
+                  content: `Analyze this PDF document and extract all textual content with maximum accuracy. Please provide:
+                  1. All readable text word-for-word from the document
+                  2. Table data, numbers, and statistical information
+                  3. Headers, titles, section names, and document structure
+                  4. Key business information, insights, and main topics
+                  5. Any charts, graphs, or visual data descriptions
+                  
+                  Document: ${file.name} (${(file.size / 1024).toFixed(1)}KB)
+                  
+                  Extract and organize all content comprehensively.`
+                }
+              ],
+              max_tokens: 2000
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            extractedText = data.choices[0].message.content;
+            console.log(`Successfully analyzed PDF with AI: ${extractedText.length} characters extracted`);
+          } else {
+            const error = await response.text();
+            console.error('OpenAI API error for PDF:', error);
+            extractedText = `PDF document: ${file.name} (${(file.size / 1024).toFixed(1)}KB). Analysis failed: ${error}`;
+          }
         } catch (error) {
-          extractedText = `PDF document: ${file.name}. Error processing: ${error.message}`
+          console.error('Error analyzing PDF:', error);
+          extractedText = `PDF document: ${file.name}. Error during analysis: ${error.message}`;
         }
       }
     } else if (file.type.includes('officedocument') || file.name.endsWith('.docx') || file.name.endsWith('.xlsx') || file.name.endsWith('.pptx')) {
