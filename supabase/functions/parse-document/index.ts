@@ -7,6 +7,7 @@ const corsHeaders = {
 }
 
 const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY')
+const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -35,9 +36,9 @@ serve(async (req) => {
       extractedText = new TextDecoder().decode(uint8Array)
       console.log(`Extracted ${extractedText.length} characters from text file`)
     } else if (file.type.startsWith('image/')) {
-      // For images, use DeepSeek for vision analysis
-      if (!deepseekApiKey) {
-        extractedText = `Image file: ${file.name}. Unable to analyze - DeepSeek API key not configured.`
+      // For images, use OpenAI vision analysis (DeepSeek doesn't support vision)
+      if (!openAIApiKey) {
+        extractedText = `Image file: ${file.name}. Unable to analyze - OpenAI API key not configured.`
       } else {
         try {
           // Convert to base64 safely
@@ -46,14 +47,14 @@ serve(async (req) => {
           )
           const mimeType = file.type || 'image/jpeg'
           
-          const response = await fetch('https://api.deepseek.com/chat/completions', {
+          const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${deepseekApiKey}`,
+              'Authorization': `Bearer ${openAIApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'deepseek-chat',
+              model: 'gpt-4o-mini',
               messages: [
                 {
                   role: 'user',
@@ -78,10 +79,10 @@ serve(async (req) => {
           if (response.ok) {
             const data = await response.json()
             extractedText = data.choices[0].message.content
-            console.log(`Successfully analyzed image with DeepSeek: ${extractedText.length} characters`)
+            console.log(`Successfully analyzed image with OpenAI: ${extractedText.length} characters`)
           } else {
             const error = await response.text()
-            console.error('DeepSeek API error:', error)
+            console.error('OpenAI API error:', error)
             extractedText = `Image file: ${file.name}. Analysis failed: ${error}`
           }
         } catch (error) {
