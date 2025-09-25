@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
+const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY')
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -35,9 +35,9 @@ serve(async (req) => {
       extractedText = new TextDecoder().decode(uint8Array)
       console.log(`Extracted ${extractedText.length} characters from text file`)
     } else if (file.type.startsWith('image/')) {
-      // For images, use GPT-4o-mini for vision analysis
-      if (!openAIApiKey) {
-        extractedText = `Image file: ${file.name}. Unable to analyze - OpenAI API key not configured.`
+      // For images, use DeepSeek for vision analysis
+      if (!deepseekApiKey) {
+        extractedText = `Image file: ${file.name}. Unable to analyze - DeepSeek API key not configured.`
       } else {
         try {
           // Convert to base64 safely
@@ -46,14 +46,14 @@ serve(async (req) => {
           )
           const mimeType = file.type || 'image/jpeg'
           
-          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          const response = await fetch('https://api.deepseek.com/chat/completions', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${openAIApiKey}`,
+              'Authorization': `Bearer ${deepseekApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'gpt-4o-mini',
+              model: 'deepseek-chat',
               messages: [
                 {
                   role: 'user',
@@ -78,10 +78,10 @@ serve(async (req) => {
           if (response.ok) {
             const data = await response.json()
             extractedText = data.choices[0].message.content
-            console.log(`Successfully analyzed image with AI: ${extractedText.length} characters`)
+            console.log(`Successfully analyzed image with DeepSeek: ${extractedText.length} characters`)
           } else {
             const error = await response.text()
-            console.error('OpenAI API error:', error)
+            console.error('DeepSeek API error:', error)
             extractedText = `Image file: ${file.name}. Analysis failed: ${error}`
           }
         } catch (error) {
@@ -90,9 +90,9 @@ serve(async (req) => {
         }
       }
     } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-      // For PDFs, use OpenAI to analyze and extract content
-      if (!openAIApiKey) {
-        extractedText = `PDF document: ${file.name}. Unable to analyze - OpenAI API key not configured.`
+      // For PDFs, use DeepSeek to analyze and extract content
+      if (!deepseekApiKey) {
+        extractedText = `PDF document: ${file.name}. Unable to analyze - DeepSeek API key not configured.`
       } else {
         try {
           // Convert first portion of PDF to base64 for AI analysis (limit to prevent memory issues)
@@ -102,14 +102,14 @@ serve(async (req) => {
           
           console.log(`Processing PDF ${file.name}: ${maxBytes} bytes for AI analysis`);
           
-          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          const response = await fetch('https://api.deepseek.com/chat/completions', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${openAIApiKey}`,
+              'Authorization': `Bearer ${deepseekApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'gpt-4o-mini',
+              model: 'deepseek-chat',
               messages: [
                 {
                   role: 'user',
@@ -132,10 +132,10 @@ serve(async (req) => {
           if (response.ok) {
             const data = await response.json();
             extractedText = data.choices[0].message.content;
-            console.log(`Successfully analyzed PDF with AI: ${extractedText.length} characters extracted`);
+            console.log(`Successfully analyzed PDF with DeepSeek: ${extractedText.length} characters extracted`);
           } else {
             const error = await response.text();
-            console.error('OpenAI API error for PDF:', error);
+            console.error('DeepSeek API error for PDF:', error);
             extractedText = `PDF document: ${file.name} (${(file.size / 1024).toFixed(1)}KB). Analysis failed: ${error}`;
           }
         } catch (error) {
