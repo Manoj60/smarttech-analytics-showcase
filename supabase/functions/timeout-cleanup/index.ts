@@ -43,9 +43,9 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    console.error('Error in timeout-cleanup function:', error.message);
+    console.error('Error in timeout-cleanup function:', error instanceof Error ? error.message : 'Unknown error');
     return new Response(JSON.stringify({ 
-      error: error.message || 'Internal server error' 
+      error: error instanceof Error ? error.message : 'Internal server error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

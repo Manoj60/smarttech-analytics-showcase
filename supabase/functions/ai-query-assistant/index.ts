@@ -81,8 +81,8 @@ serve(async (req) => {
           files_provided: files.length,
           mode: 'file_only'
         } : {
-          website_sections: fullContext.website.sections.length,
-          database_records: fullContext.database.records_found,
+          website_sections: fullContext.website?.sections.length || 0,
+          database_records: fullContext.database?.records_found || 0,
           files_provided: files.length,
           mode: 'full_context'
         }
@@ -95,7 +95,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Internal server error',
-        message: error.message,
+        message: error instanceof Error ? error.message : 'Unknown error',
         fallback_response: "I apologize, but I'm experiencing technical difficulties. Please try again later or contact our support team for assistance."
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -259,7 +259,7 @@ async function gatherDatabaseContext(supabase: any, query: string) {
 
 async function generateAIResponse(apiKey: string, query: string, context: any) {
   let systemPrompt;
-  let enhancedQuery;
+  let enhancedQuery: string;
   
   if (context.file_mode) {
     // File-only mode: Focus only on analyzing file content

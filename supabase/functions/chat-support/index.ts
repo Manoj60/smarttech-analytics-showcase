@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { Resend } from "npm:resend@2.0.0";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 // Tighter CORS - replace '*' with your actual domain in production  
 const corsHeaders = {
@@ -439,9 +439,9 @@ The customer's name is ${userName} and their email is ${userEmail}. Always maint
     });
 
   } catch (error) {
-    console.error('Error in chat-support function:', error.message);
+    console.error('Error in chat-support function:', error instanceof Error ? error.message : 'Unknown error');
     return new Response(JSON.stringify({ 
-      error: error.message || 'Internal server error' 
+      error: error instanceof Error ? error.message : 'Internal server error'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -498,7 +498,7 @@ async function checkRateLimit(ip: string, functionName: string): Promise<{ allow
 
     return { allowed: true };
   } catch (error) {
-    console.error('Rate limit check failed:', error.message);
+    console.error('Rate limit check failed:', error instanceof Error ? error.message : 'Unknown error');
     return { allowed: true }; // Allow on error to avoid blocking legitimate users
   }
 }
@@ -548,7 +548,7 @@ async function searchRelevantContext(supabase: any, userMessage: string, userNam
         .limit(5);
       
       if (activeJobs && activeJobs.length > 0) {
-        contextSources.push(`Available Positions: ${activeJobs.map(job => `${job.title} (${job.department})`).join(', ')}`);
+        contextSources.push(`Available Positions: ${activeJobs.map((job: any) => `${job.title} (${job.department})`).join(', ')}`);
       }
     }
     

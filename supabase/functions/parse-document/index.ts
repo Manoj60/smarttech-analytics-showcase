@@ -86,7 +86,7 @@ serve(async (req) => {
           }
         } catch (error) {
           console.error('Error analyzing image:', error)
-          extractedText = `Image file: ${file.name}. Error during analysis: ${error.message}`
+          extractedText = `Image file: ${file.name}. Error during analysis: ${error instanceof Error ? error.message : 'Unknown error'}`
         }
       }
     } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
@@ -140,7 +140,7 @@ serve(async (req) => {
           }
         } catch (error) {
           console.error('Error analyzing PDF:', error);
-          extractedText = `PDF document: ${file.name}. Error during analysis: ${error.message}`;
+          extractedText = `PDF document: ${file.name}. Error during analysis: ${error instanceof Error ? error.message : 'Unknown error'}`;
         }
       }
     } else if (file.type.includes('officedocument') || file.name.endsWith('.docx') || file.name.endsWith('.xlsx') || file.name.endsWith('.pptx')) {
@@ -153,7 +153,7 @@ serve(async (req) => {
         const parsed = JSON.parse(jsonContent)
         extractedText = `JSON file: ${file.name}\nStructured data containing: ${Object.keys(parsed).join(', ')}\nContent: ${jsonContent.substring(0, 2000)}${jsonContent.length > 2000 ? '...' : ''}`
       } catch (error) {
-        extractedText = `JSON file: ${file.name}. Error parsing: ${error.message}`
+        extractedText = `JSON file: ${file.name}. Error parsing: ${error instanceof Error ? error.message : 'Unknown error'}`
       }
     } else if (file.type.startsWith('text/csv') || file.name.endsWith('.csv')) {
       // CSV files
@@ -182,8 +182,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Document processing failed',
-        message: error.message,
-        text: `Error processing file: ${error.message}` 
+        message: error instanceof Error ? error.message : 'Unknown error',
+        text: `Error processing file: ${error instanceof Error ? error.message : 'Unknown error'}` 
       }),
       {
         status: 500,

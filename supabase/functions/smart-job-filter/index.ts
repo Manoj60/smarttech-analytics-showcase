@@ -124,7 +124,7 @@ Return only a JSON array of job IDs that match the query. Example: ["id1", "id2"
       // Fallback: try to extract job IDs from the response text
       const matches = aiResponse.match(/["']([a-f0-9-]{36})["']/g);
       if (matches) {
-        filteredJobIds = matches.map(match => match.replace(/["']/g, ''));
+        filteredJobIds = matches.map((match: string) => match.replace(/["']/g, ''));
       } else {
         // If no valid IDs found, return all jobs (fallback)
         filteredJobIds = jobs.map((job: Job) => job.id);
@@ -146,7 +146,7 @@ Return only a JSON array of job IDs that match the query. Example: ["id1", "id2"
   } catch (error) {
     console.error('Error in smart-job-filter function:', error);
     return new Response(JSON.stringify({ 
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
       filteredJobs: [],
       matchedCount: 0 
     }), {
