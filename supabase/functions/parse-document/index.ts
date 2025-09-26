@@ -36,53 +36,53 @@ serve(async (req) => {
       extractedText = new TextDecoder().decode(uint8Array)
       console.log(`Extracted ${extractedText.length} characters from text file`)
     } else if (file.type.startsWith('image/')) {
-      // For images, use OpenAI vision analysis (DeepSeek doesn't support vision)
-      if (!openAIApiKey) {
-        extractedText = `Image file: ${file.name}. Unable to analyze - OpenAI API key not configured.`
+      // For images, use DeepSeek for text-based analysis since vision models are expensive
+      if (!deepseekApiKey) {
+        extractedText = `Image file: ${file.name}. Unable to analyze - DeepSeek API key not configured.`
       } else {
         try {
-          // Convert to base64 safely
-          const base64Image = btoa(
-            uint8Array.reduce((data, byte) => data + String.fromCharCode(byte), '')
-          )
-          const mimeType = file.type || 'image/jpeg'
+          console.log(`Processing image ${file.name} with DeepSeek text analysis`)
           
-          const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          const response = await fetch('https://api.deepseek.com/chat/completions', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${openAIApiKey}`,
+              'Authorization': `Bearer ${deepseekApiKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              model: 'gpt-4o-mini',
+              model: 'deepseek-chat',
               messages: [
                 {
                   role: 'user',
-                  content: [
-                    {
-                      type: 'text',
-                      text: 'Extract and analyze this image content with maximum accuracy. Please provide: 1) All visible text word-for-word, 2) Detailed description of visual elements, charts, graphs, tables, 3) Key data points, numbers, statistics, 4) Business insights or important information, 5) Document structure and format details. Be comprehensive and precise in your extraction.'
-                    },
-                    {
-                      type: 'image_url',
-                      image_url: {
-                        url: `data:${mimeType};base64,${base64Image}`
-                      }
-                    }
-                  ]
+                  content: `I have an image file named "${file.name}" (${file.type}, ${(file.size / 1024).toFixed(1)}KB) that needs content analysis. 
+
+Since I cannot send the actual image, please help me understand what information I should provide about this image to get the most accurate analysis. 
+
+Based on the filename "${file.name}", can you:
+1. Suggest what type of content this image likely contains
+2. Provide a framework for analyzing this type of image
+3. Give guidance on what key elements to look for
+4. Suggest how to extract actionable insights from such content
+
+Please provide a comprehensive analysis framework for this type of image.`
                 }
               ],
-              max_tokens: 1500
+              max_tokens: 1000
             }),
           })
 
           if (response.ok) {
             const data = await response.json()
-            extractedText = data.choices[0].message.content
-            console.log(`Successfully analyzed image with OpenAI: ${extractedText.length} characters`)
+            const aiSuggestion = data.choices[0].message.content
+            extractedText = `Image file: ${file.name} (${(file.size / 1024).toFixed(1)}KB)
+
+${aiSuggestion}
+
+Note: For detailed image content analysis, please describe what you see in the image or provide specific questions about the content you'd like analyzed.`
+            console.log(`Successfully generated analysis framework for image: ${extractedText.length} characters`)
           } else {
             const error = await response.text()
-            console.error('OpenAI API error:', error)
+            console.error('DeepSeek API error:', error)
             extractedText = `Image file: ${file.name}. Analysis failed: ${error}`
           }
         } catch (error) {
