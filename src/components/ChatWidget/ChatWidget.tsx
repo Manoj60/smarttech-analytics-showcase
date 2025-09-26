@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { MessageCircle, X, Send, User, Bot, Settings } from 'lucide-react';
+import { MessageCircle, X, Send, User, Bot, Settings, Paperclip, FileText, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -25,6 +25,14 @@ interface Message {
   role: 'user' | 'assistant';
   created_at: string;
   thread_id?: string;
+  files?: UploadedFile[];
+}
+
+interface UploadedFile {
+  name: string;
+  type: string;
+  size: number;
+  extractedText: string;
 }
 
 interface Thread {
@@ -58,7 +66,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<UserRole>('guest');
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [isProcessingFiles, setIsProcessingFiles] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -152,8 +163,94 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsProcessingFiles(true);
+    const processedFiles: UploadedFile[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        // Check file type
+        const allowedTypes = ['.pdf', '.docx', '.doc', '.txt', '.csv', '.jpg', '.jpeg', '.png'];
+        const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+        
+        if (!allowedTypes.includes(fileExtension)) {
+          toast({
+            title: "Unsupported File Type",
+            description: `${file.name} is not supported. Please upload: PDF, DOC, DOCX, TXT, CSV, JPG, PNG files.`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        // Check file size (20MB limit)
+        if (file.size > 20 * 1024 * 1024) {
+          toast({
+            title: "File Too Large",
+            description: `${file.name} is too large. Maximum file size is 20MB.`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        // Parse document
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const { data, error } = await supabase.functions.invoke('parse-document', {
+          body: formData,
+        });
+
+        if (error) {
+          console.error('Error parsing file:', error);
+          toast({
+            title: "File Processing Error",
+            description: `Failed to process ${file.name}. Please try again.`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        processedFiles.push({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          extractedText: data.text || `Unable to extract content from ${file.name}`
+        });
+      }
+
+      setUploadedFiles(prev => [...prev, ...processedFiles]);
+      
+      if (processedFiles.length > 0) {
+        toast({
+          title: "Files Processed",
+          description: `Successfully processed ${processedFiles.length} file(s). You can now ask questions about them.`,
+        });
+      }
+    } catch (error) {
+      console.error('Error processing files:', error);
+      toast({
+        title: "Processing Error",
+        description: "Failed to process files. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessingFiles(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
   const sendMessage = async () => {
-    if (!currentMessage.trim() || !userInfo || isSending) return;
+    if ((!currentMessage.trim() && uploadedFiles.length === 0) || !userInfo || isSending) return;
 
     // Check message limit for user role
     const messageLimit = getMessageLimit(userRole);
@@ -171,61 +268,94 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
 
     const userMessage: Message = {
       id: `temp-${Date.now()}`,
-      content: currentMessage,
+      content: currentMessage || (uploadedFiles.length > 0 ? `Uploaded ${uploadedFiles.length} file(s) for analysis` : ''),
       role: 'user',
       created_at: new Date().toISOString(),
-      thread_id: currentThreadId || undefined
+      thread_id: currentThreadId || undefined,
+      files: uploadedFiles.length > 0 ? [...uploadedFiles] : undefined
     };
 
     setMessages(prev => [...prev, userMessage]);
     setCurrentMessage('');
+    setUploadedFiles([]);
     setIsSending(true);
     setIsTyping(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('chat-support', {
-        body: {
-          message: currentMessage,
-          conversationId: conversationId,
-          conversationSecret: conversationSecret,
-          userName: userInfo.name,
-          userEmail: userInfo.email,
-          userRole: userRole,
-          threadId: currentThreadId,
-          action: 'send'
-        }
-      });
+      // If files are uploaded, use ai-query-assistant for analysis
+      if (uploadedFiles.length > 0) {
+        const filesData = uploadedFiles.map(file => ({
+          name: file.name,
+          type: file.type,
+          hasText: true,
+          extractedText: file.extractedText
+        }));
 
-      if (error) {
-        throw error;
-      }
-
-      const response = data;
-      
-      if (response.error) {
-        throw new Error(response.error);
-      }
-
-      // Update conversation credentials if this is a new conversation
-      if (!conversationId && response.conversationId) {
-        setConversationId(response.conversationId);
-        setConversationSecret(response.conversationSecret);
+        const query = currentMessage || "Please analyze the uploaded files and provide insights about their content.";
         
-        // Store in localStorage for persistence
-        localStorage.setItem('chatConversationId', response.conversationId);
-        localStorage.setItem('chatConversationSecret', response.conversationSecret);
+        const { data, error } = await supabase.functions.invoke('ai-query-assistant', {
+          body: {
+            query: query,
+            files: filesData
+          }
+        });
+
+        if (error) throw error;
+
+        const assistantMessage: Message = {
+          id: `assistant-${Date.now()}`,
+          content: data.response || "I've analyzed your files but couldn't generate a response.",
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+          thread_id: currentThreadId || undefined
+        };
+
+        setMessages(prev => [...prev, assistantMessage]);
+      } else {
+        // Regular chat message
+        const { data, error } = await supabase.functions.invoke('chat-support', {
+          body: {
+            message: currentMessage,
+            conversationId: conversationId,
+            conversationSecret: conversationSecret,
+            userName: userInfo.name,
+            userEmail: userInfo.email,
+            userRole: userRole,
+            threadId: currentThreadId,
+            action: 'send'
+          }
+        });
+
+        if (error) throw error;
+
+        const response = data;
+        
+        if (response.error) {
+          throw new Error(response.error);
+        }
+
+        // Update conversation credentials if this is a new conversation
+        if (!conversationId && response.conversationId) {
+          setConversationId(response.conversationId);
+          setConversationSecret(response.conversationSecret);
+          
+          // Store in localStorage for persistence
+          localStorage.setItem('chatConversationId', response.conversationId);
+          localStorage.setItem('chatConversationSecret', response.conversationSecret);
+        }
+
+        // Use the complete message history from the server response
+        if (response.messages) {
+          setMessages(response.messages.map((msg: any) => ({
+            id: msg.id,
+            content: msg.content,
+            role: msg.role as 'user' | 'assistant',
+            created_at: msg.created_at,
+            thread_id: msg.thread_id
+          })));
+        }
       }
 
-      // Use the complete message history from the server response
-      if (response.messages) {
-        setMessages(response.messages.map((msg: any) => ({
-          id: msg.id,
-          content: msg.content,
-          role: msg.role as 'user' | 'assistant',
-          created_at: msg.created_at,
-          thread_id: msg.thread_id
-        })));
-      }
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -381,6 +511,8 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
     setThreads([]);
     setCurrentThreadId(null);
     setShowAdvancedOptions(false);
+    setUploadedFiles([]);
+    setIsProcessingFiles(false);
     
     // Clear localStorage
     localStorage.removeItem('chatConversationId');
@@ -468,15 +600,25 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
                               <Bot className="h-4 w-4" />
                             )}
                           </div>
-                          <div
-                            className={`px-3 py-2 rounded-lg min-w-0 max-w-full overflow-x-auto ${
-                              message.role === 'user'
-                                ? 'bg-primary text-white'
-                                : 'bg-muted text-foreground'
-                            }`}
-                          >
-                            <p className={`text-sm ${message.role === 'assistant' ? 'whitespace-pre' : 'whitespace-pre-wrap break-words'}`}>{message.content}</p>
-                          </div>
+                           <div
+                             className={`px-3 py-2 rounded-lg min-w-0 max-w-full overflow-x-auto ${
+                               message.role === 'user'
+                                 ? 'bg-primary text-white'
+                                 : 'bg-muted text-foreground'
+                             }`}
+                           >
+                             <p className={`text-sm ${message.role === 'assistant' ? 'whitespace-pre' : 'whitespace-pre-wrap break-words'}`}>{message.content}</p>
+                             {message.files && message.files.length > 0 && (
+                               <div className="mt-2 space-y-1">
+                                 {message.files.map((file, index) => (
+                                   <div key={index} className="flex items-center gap-2 text-xs opacity-80">
+                                     <FileText className="h-3 w-3" />
+                                     <span>{file.name} ({(file.size / 1024).toFixed(1)}KB)</span>
+                                   </div>
+                                 ))}
+                               </div>
+                             )}
+                           </div>
                         </div>
                       </div>
                     ))}
@@ -499,18 +641,62 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
                     />
                   )}
 
+                  {/* File upload area */}
+                  {uploadedFiles.length > 0 && (
+                    <div className="bg-muted p-2 rounded-lg space-y-2">
+                      <p className="text-xs text-muted-foreground">Uploaded files:</p>
+                      {uploadedFiles.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-background p-2 rounded">
+                          <div className="flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            <span className="text-sm">{file.name}</span>
+                            <span className="text-xs text-muted-foreground">({(file.size / 1024).toFixed(1)}KB)</span>
+                          </div>
+                          <Button
+                            onClick={() => removeFile(index)}
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
                     <Input
                       value={currentMessage}
                       onChange={(e) => setCurrentMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
-                      placeholder="Type your message..."
-                      disabled={isSending}
+                      placeholder={uploadedFiles.length > 0 ? "Ask questions about your files..." : "Type your message..."}
+                      disabled={isSending || isProcessingFiles}
                       className="flex-1"
                     />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      accept=".pdf,.docx,.doc,.txt,.csv,.jpg,.jpeg,.png"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isSending || isProcessingFiles}
+                      variant="outline"
+                      size="sm"
+                    >
+                      {isProcessingFiles ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Paperclip className="h-4 w-4" />
+                      )}
+                    </Button>
                     <Button
                       onClick={sendMessage}
-                      disabled={!currentMessage.trim() || isSending}
+                      disabled={(!currentMessage.trim() && uploadedFiles.length === 0) || isSending || isProcessingFiles}
                       size="sm"
                     >
                       <Send className="h-4 w-4" />
