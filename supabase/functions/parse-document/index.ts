@@ -36,60 +36,28 @@ serve(async (req) => {
       extractedText = new TextDecoder().decode(uint8Array)
       console.log(`Extracted ${extractedText.length} characters from text file`)
     } else if (file.type.startsWith('image/')) {
-      // For images, use DeepSeek for text-based analysis since vision models are expensive
-      if (!deepseekApiKey) {
-        extractedText = `Image file: ${file.name}. Unable to analyze - DeepSeek API key not configured.`
-      } else {
-        try {
-          console.log(`Processing image ${file.name} with DeepSeek text analysis`)
-          
-          const response = await fetch('https://api.deepseek.com/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${deepseekApiKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: 'deepseek-chat',
-              messages: [
-                {
-                  role: 'user',
-                  content: `I have an image file named "${file.name}" (${file.type}, ${(file.size / 1024).toFixed(1)}KB) that needs content analysis. 
+      // For images, provide helpful guidance since we cannot directly analyze visual content
+      console.log(`Processing image file: ${file.name}`)
+      
+      extractedText = `Image file: ${file.name} (${(file.size / 1024).toFixed(1)}KB)
 
-Since I cannot send the actual image, please help me understand what information I should provide about this image to get the most accurate analysis. 
+This is an image file that cannot be directly analyzed for text content. However, I can help you with:
 
-Based on the filename "${file.name}", can you:
-1. Suggest what type of content this image likely contains
-2. Provide a framework for analyzing this type of image
-3. Give guidance on what key elements to look for
-4. Suggest how to extract actionable insights from such content
+**What you can do:**
+1. **Describe the image**: Tell me what you see in the image and I can help analyze that information
+2. **Ask specific questions**: What would you like to know about this image?
+3. **Text extraction**: If the image contains text, describe what text you see and I can help analyze it
+4. **Context analysis**: Provide context about where this image came from and what you're trying to achieve
 
-Please provide a comprehensive analysis framework for this type of image.`
-                }
-              ],
-              max_tokens: 1000
-            }),
-          })
+**Common image analysis tasks I can help with:**
+- Document analysis (if you describe the content)
+- Data interpretation (if you tell me about charts/graphs)
+- Business insights (if you explain the business context)
+- Content organization (if you describe the layout)
 
-          if (response.ok) {
-            const data = await response.json()
-            const aiSuggestion = data.choices[0].message.content
-            extractedText = `Image file: ${file.name} (${(file.size / 1024).toFixed(1)}KB)
-
-${aiSuggestion}
-
-Note: For detailed image content analysis, please describe what you see in the image or provide specific questions about the content you'd like analyzed.`
-            console.log(`Successfully generated analysis framework for image: ${extractedText.length} characters`)
-          } else {
-            const error = await response.text()
-            console.error('DeepSeek API error:', error)
-            extractedText = `Image file: ${file.name}. Analysis failed: ${error}`
-          }
-        } catch (error) {
-          console.error('Error analyzing image:', error)
-          extractedText = `Image file: ${file.name}. Error during analysis: ${error instanceof Error ? error.message : 'Unknown error'}`
-        }
-      }
+**To get started**: Simply describe what you see in the image or ask me a specific question about it, and I'll provide detailed analysis and insights based on your description.`
+      
+      console.log(`Generated image guidance: ${extractedText.length} characters`)
     } else if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
       // For PDFs, use DeepSeek to analyze and extract content
       if (!deepseekApiKey) {
