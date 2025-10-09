@@ -2,8 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { BarChart3, Brain, TrendingUp, Database, Eye, Zap } from 'lucide-react';
+import { useEffect } from 'react';
 
 const Products = () => {
+  useEffect(() => {
+    // Set canonical URL
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) {
+      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/products');
+    }
+  }, []);
   const productCategories = [
     {
       title: "Data Analytics Platforms",

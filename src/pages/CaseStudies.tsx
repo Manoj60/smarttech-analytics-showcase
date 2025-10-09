@@ -3,8 +3,16 @@ import { Button } from '@/components/ui/button';
 import { PromptBox } from '@/components/ui/prompt-box';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Target, CheckCircle, ArrowRight } from 'lucide-react';
+import { useEffect } from 'react';
 
 const CaseStudies = () => {
+  useEffect(() => {
+    // Set canonical URL
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) {
+      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/case-studies');
+    }
+  }, []);
   const caseStudies = [
     {
       title: "Global Retail Chain: AI-Powered Demand Forecasting",

@@ -2,8 +2,16 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Target, Cloud, Brain, Database, BarChart3, Shield, Users, Zap, GraduationCap } from 'lucide-react';
+import { useEffect } from 'react';
 
 const Services = () => {
+  useEffect(() => {
+    // Set canonical URL
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) {
+      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/services');
+    }
+  }, []);
   const services = [
     {
       title: "Data Strategy & Governance",

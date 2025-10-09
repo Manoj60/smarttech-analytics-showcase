@@ -42,6 +42,12 @@ const Careers = () => {
 
   useEffect(() => {
     fetchJobs();
+    
+    // Set canonical URL
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) {
+      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/careers');
+    }
   }, []);
 
   const fetchJobs = async () => {

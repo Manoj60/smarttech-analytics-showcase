@@ -3,8 +3,16 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Users, Target, Lightbulb, Award, Heart } from 'lucide-react';
 import heroImage from '@/assets/hero-image.jpg';
+import { useEffect } from 'react';
 
 const Home = () => {
+  useEffect(() => {
+    // Set canonical URL
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) {
+      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/');
+    }
+  }, []);
   const leadership = [
     {
       name: "Manoj Regmi",

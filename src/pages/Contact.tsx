@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,13 @@ import { Mail, Phone, MapPin, Clock, LinkedinIcon, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const Contact = () => {
+  useEffect(() => {
+    // Set canonical URL
+    const canonical = document.querySelector('link[rel="canonical"]');
+    if (canonical) {
+      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/contact');
+    }
+  }, []);
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
