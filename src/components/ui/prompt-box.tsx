@@ -16,7 +16,6 @@ import {
   File,
   Mic,
   Smile,
-  Bot,
   User,
   Copy,
   Volume2,
@@ -489,17 +488,11 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
                     message.role === 'user' ? 'flex-row-reverse' : ''
                   }`}
                 >
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    message.role === 'user' 
-                      ? 'bg-primary' 
-                      : 'bg-secondary'
-                  }`}>
-                    {message.role === 'user' ? (
+                  {message.role === 'user' && (
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-primary">
                       <User className="w-4 h-4 text-primary-foreground" />
-                    ) : (
-                      <Bot className="w-4 h-4 text-foreground" />
-                    )}
-                  </div>
+                    </div>
+                  )}
                   <div className="flex-1 space-y-2">
                     <div
                       className={`px-4 py-3 rounded-lg max-w-[85%] ${
@@ -630,9 +623,6 @@ export const PromptBox: React.FC<PromptBoxProps> = ({
               
               {isTyping && (
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-foreground" />
-                  </div>
                   <div className="px-4 py-3 rounded-lg bg-secondary text-foreground">
                     <div className="flex gap-1">
                       <div className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce"></div>
