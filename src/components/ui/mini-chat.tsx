@@ -76,17 +76,11 @@ export const MiniChatUI = () => {
                 message.role === 'user' ? 'flex-row-reverse' : ''
               }`}
             >
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                message.role === 'user' 
-                  ? 'bg-primary' 
-                  : 'bg-secondary'
-              }`}>
-                {message.role === 'user' ? (
+              {message.role === 'user' && (
+                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 bg-primary">
                   <User className="w-3 h-3 text-primary-foreground" />
-                ) : (
-                  <Bot className="w-3 h-3 text-foreground" />
-                )}
-              </div>
+                </div>
+              )}
               <div
                 className={`px-3 py-2 rounded-lg text-sm max-w-[80%] ${
                   message.role === 'user'
@@ -101,9 +95,6 @@ export const MiniChatUI = () => {
           
           {isTyping && (
             <div className="flex items-start gap-2">
-              <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
-                <Bot className="w-3 h-3 text-foreground" />
-              </div>
               <div className="px-3 py-2 rounded-lg bg-secondary text-foreground text-sm">
                 <div className="flex gap-1">
                   <div className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce"></div>

@@ -587,19 +587,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
                             message.role === 'user' ? 'flex-row-reverse' : 'flex-row'
                           } items-start gap-2 min-w-0`}
                         >
-                          <div
-                            className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                              message.role === 'user'
-                                ? 'bg-primary text-white'
-                                : 'bg-muted text-foreground'
-                            }`}
-                          >
-                            {message.role === 'user' ? (
+                          {message.role === 'user' && (
+                            <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-primary text-white">
                               <User className="h-4 w-4" />
-                            ) : (
-                              <Bot className="h-4 w-4" />
-                            )}
-                          </div>
+                            </div>
+                          )}
                            <div
                              className={`px-3 py-2 rounded-lg min-w-0 max-w-full overflow-x-auto ${
                                message.role === 'user'

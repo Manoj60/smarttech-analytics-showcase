@@ -5,9 +5,6 @@ const TypingIndicator: React.FC = () => {
   return (
     <div className="flex justify-start">
       <div className="flex items-start gap-2 max-w-[80%]">
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted text-foreground flex items-center justify-center">
-          <Bot className="h-4 w-4" />
-        </div>
         <div className="bg-muted text-foreground px-3 py-2 rounded-lg">
           <div className="flex items-center gap-1">
             <span className="text-sm">Typing</span>
