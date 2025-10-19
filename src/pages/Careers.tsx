@@ -40,9 +40,41 @@ const Careers = () => {
   const { toast } = useToast();
   const { isAdmin } = useAuth();
 
+  const CACHE_KEY = "careers_jobs_cache_v1";
+  const CACHE_TTL_MS = 1000 * 60 * 60; // 1 hour
+  type JobsCache = { timestamp: number; data: Job[] };
+
+  const readJobsCache = (): Job[] | null => {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as JobsCache;
+      if (Date.now() - parsed.timestamp > CACHE_TTL_MS) return null;
+      return parsed.data;
+    } catch {
+      return null;
+    }
+  };
+
+  const writeJobsCache = (data: Job[]) => {
+    try {
+      const payload: JobsCache = { timestamp: Date.now(), data };
+      localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+    } catch {
+      // ignore quota or serialization errors
+    }
+  };
+
   useEffect(() => {
+    const cached = readJobsCache();
+    if (cached && cached.length) {
+      setJobs(cached);
+      setFilteredJobs(cached);
+      setLoading(false);
+    }
+
     fetchJobs();
-    
+
     // Set canonical URL
     const canonical = document.querySelector('link[rel="canonical"]');
     if (canonical) {
@@ -50,7 +82,7 @@ const Careers = () => {
     }
   }, []);
 
-  const fetchJobs = async () => {
+  const fetchJobs = async (retry = 0) => {
     try {
       const { data, error } = await supabase
         .from("jobs")
@@ -59,14 +91,33 @@ const Careers = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setJobs(data || []);
-      setFilteredJobs(data || []);
+      const jobsData = data || [];
+      setJobs(jobsData);
+      setFilteredJobs(jobsData);
+      writeJobsCache(jobsData);
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to load job listings. Please try again.",
-        variant: "destructive",
-      });
+      if (retry < 2) {
+        setTimeout(() => fetchJobs(retry + 1), 500 * Math.pow(2, retry));
+        return;
+      }
+
+      const cached = readJobsCache();
+      if (cached && cached.length) {
+        setJobs(cached);
+        setFilteredJobs(cached);
+        toast({
+          title: "Working offline",
+          description: "Showing cached job listings due to a temporary server issue.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: navigator.onLine
+            ? "Failed to load job listings. Please try again later."
+            : "You appear to be offline. Please check your connection and retry.",
+          variant: "destructive",
+        });
+      }
       console.error("Error fetching jobs:", error);
     } finally {
       setLoading(false);
