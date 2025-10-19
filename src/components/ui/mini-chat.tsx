@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from './button';
 import { Card, CardContent } from './card';
-import { Send, Bot, User } from 'lucide-react';
+import { Send, User } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
@@ -64,7 +64,6 @@ export const MiniChatUI = () => {
     <Card className="w-full max-w-md mx-auto gradient-card border-border shadow-medium">
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-4">
-          <Bot className="w-5 h-5 text-primary" />
           <h3 className="font-semibold text-sm text-foreground">Ask our AI Assistant</h3>
         </div>
         

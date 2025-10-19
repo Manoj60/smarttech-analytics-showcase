@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { MessageCircle, X, Send, User, Bot, Settings, Paperclip, FileText, Loader2 } from 'lucide-react';
+import { MessageCircle, X, Send, User, Settings, Paperclip, FileText, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
@@ -559,7 +559,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({ className }) => {
       ) : (
         <Card className="w-96 h-[500px] shadow-xl border-0 bg-background">
           <CardHeader className="flex flex-row items-center justify-between p-4 bg-primary text-white">
-            <CardTitle className="text-lg font-semibold text-white">Smart Tech Analytics Virtual Assistant</CardTitle>
+            <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
+              Smart Tech Analytics Virtual Assistant
+            </CardTitle>
             <Button
               onClick={handleCloseClick}
               variant="ghost"

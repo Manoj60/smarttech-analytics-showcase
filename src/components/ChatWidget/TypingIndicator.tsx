@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bot } from 'lucide-react';
+
 
 const TypingIndicator: React.FC = () => {
   return (
