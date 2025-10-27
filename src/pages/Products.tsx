@@ -2,16 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { BarChart3, Brain, TrendingUp, Database, Eye, Zap } from 'lucide-react';
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 
 const Products = () => {
-  useEffect(() => {
-    // Set canonical URL
-    const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) {
-      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/products');
-    }
-  }, []);
   const productCategories = [
     {
       title: "Data Analytics Platforms",
@@ -88,7 +81,15 @@ const Products = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <>
+      <Helmet>
+        <title>Our Products - AI Analytics Solutions | Smart Tech Analytics</title>
+        <meta name="description" content="Cutting-edge analytics and AI solutions designed to accelerate your digital transformation. Explore our data analytics platforms, AI-powered dashboards, and predictive analytics tools." />
+        <link rel="canonical" href="https://www.smarttechanalytics.com/products" />
+        <meta property="og:url" content="https://www.smarttechanalytics.com/products" />
+        <meta property="og:title" content="Our Products - AI Analytics Solutions" />
+      </Helmet>
+      <div className="min-h-screen">
       {/* Header Section */}
       <section className="py-20 gradient-hero">
         <div className="container mx-auto px-4">
@@ -228,6 +229,7 @@ const Products = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

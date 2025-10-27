@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Helmet } from 'react-helmet-async';
 
 const Auth = () => {
   const [email, setEmail] = useState("");
@@ -20,13 +21,6 @@ const Auth = () => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Add noindex meta tag for SEO
-    document.title = "Sign In | Smart Tech Analytics";
-    const metaRobots = document.createElement('meta');
-    metaRobots.name = 'robots';
-    metaRobots.content = 'noindex, nofollow';
-    document.head.appendChild(metaRobots);
-
     // Handle email confirmation tokens
     const token_hash = searchParams.get('token_hash');
     const type = searchParams.get('type');
@@ -51,14 +45,6 @@ const Auth = () => {
         }
       });
     }
-
-    return () => {
-      // Cleanup meta tag
-      const existingMeta = document.querySelector('meta[name="robots"][content="noindex, nofollow"]');
-      if (existingMeta) {
-        document.head.removeChild(existingMeta);
-      }
-    };
   }, [searchParams, toast]);
 
   useEffect(() => {
@@ -87,7 +73,12 @@ const Auth = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <>
+      <Helmet>
+        <title>Sign In | Smart Tech Analytics</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="min-h-screen">
       {/* Header Section */}
       <section className="py-20 gradient-hero">
         <div className="container mx-auto px-4">
@@ -197,6 +188,7 @@ const Auth = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

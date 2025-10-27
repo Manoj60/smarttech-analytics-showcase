@@ -14,6 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Plus, Edit, Archive, Trash2, Users, Download, Search, Filter } from "lucide-react";
 import JobForm from "@/components/Admin/JobForm";
 import ApplicationsTable from "@/components/Admin/ApplicationsTable";
+import { Helmet } from 'react-helmet-async';
 
 interface Job {
   id: string;
@@ -65,23 +66,8 @@ const AdminDashboard = () => {
   const { userProfile, signOut } = useAuth();
 
   useEffect(() => {
-    // Add noindex meta tag for SEO
-    document.title = "Admin Dashboard | Smart Tech Analytics";
-    const metaRobots = document.createElement('meta');
-    metaRobots.name = 'robots';
-    metaRobots.content = 'noindex, nofollow';
-    document.head.appendChild(metaRobots);
-
     fetchJobs();
     fetchApplications();
-
-    return () => {
-      // Cleanup meta tag
-      const existingMeta = document.querySelector('meta[name="robots"][content="noindex, nofollow"]');
-      if (existingMeta) {
-        document.head.removeChild(existingMeta);
-      }
-    };
   }, []);
 
   const fetchJobs = async () => {
@@ -253,23 +239,36 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center">
-            <div className="animate-pulse">
-              <div className="h-8 bg-muted rounded w-48 mx-auto mb-4"></div>
-              <div className="h-4 bg-muted rounded w-96 mx-auto"></div>
+      <>
+        <Helmet>
+          <title>Admin Dashboard | Smart Tech Analytics</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen">
+          <section className="py-20 lg:py-32">
+            <div className="container mx-auto px-4">
+              <div className="text-center">
+                <div className="animate-pulse">
+                  <div className="h-8 bg-muted rounded w-48 mx-auto mb-4"></div>
+                  <div className="h-4 bg-muted rounded w-96 mx-auto"></div>
+                </div>
+              </div>
             </div>
-          </div>
+          </section>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen">
-      {/* Header Section */}
-      <section className="py-20 gradient-hero">
+    <>
+      <Helmet>
+        <title>Admin Dashboard | Smart Tech Analytics</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="min-h-screen">
+        {/* Header Section */}
+        <section className="py-20 gradient-hero">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center text-primary-foreground">
             <h1 className="text-4xl lg:text-6xl font-heading font-bold mb-6">
@@ -473,6 +472,7 @@ const AdminDashboard = () => {
         </section>
       </div>
     </div>
+    </>
   );
 };
 

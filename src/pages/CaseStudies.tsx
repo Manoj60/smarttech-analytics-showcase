@@ -3,16 +3,9 @@ import { Button } from '@/components/ui/button';
 import { PromptBox } from '@/components/ui/prompt-box';
 import { Link } from 'react-router-dom';
 import { TrendingUp, Target, CheckCircle, ArrowRight } from 'lucide-react';
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 
 const CaseStudies = () => {
-  useEffect(() => {
-    // Set canonical URL
-    const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) {
-      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/case-studies');
-    }
-  }, []);
   const caseStudies = [
     {
       title: "Global Retail Chain: AI-Powered Demand Forecasting",
@@ -77,7 +70,15 @@ const CaseStudies = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <>
+      <Helmet>
+        <title>Case Studies - Real Success Stories | Smart Tech Analytics</title>
+        <meta name="description" content="Discover real-world success stories showcasing how our AI and analytics solutions have transformed businesses across retail, healthcare, and manufacturing industries." />
+        <link rel="canonical" href="https://www.smarttechanalytics.com/case-studies" />
+        <meta property="og:url" content="https://www.smarttechanalytics.com/case-studies" />
+        <meta property="og:title" content="Case Studies - Real Success Stories" />
+      </Helmet>
+      <div className="min-h-screen">
       {/* Header Section */}
       <section className="py-20 gradient-hero">
         <div className="container mx-auto px-4">
@@ -276,6 +277,7 @@ const CaseStudies = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

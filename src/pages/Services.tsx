@@ -2,16 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Target, Cloud, Brain, Database, BarChart3, Shield, Users, Zap, GraduationCap } from 'lucide-react';
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 
 const Services = () => {
-  useEffect(() => {
-    // Set canonical URL
-    const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) {
-      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/services');
-    }
-  }, []);
   const services = [
     {
       title: "Data Strategy & Governance",
@@ -124,7 +117,15 @@ const Services = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <>
+      <Helmet>
+        <title>Consulting Services - Data Strategy & AI Solutions | Smart Tech Analytics</title>
+        <meta name="description" content="Comprehensive consulting and implementation services including data strategy, cloud infrastructure, AI/ML consulting, and enterprise analytics to accelerate your transformation." />
+        <link rel="canonical" href="https://www.smarttechanalytics.com/services" />
+        <meta property="og:url" content="https://www.smarttechanalytics.com/services" />
+        <meta property="og:title" content="Consulting Services - Data Strategy & AI Solutions" />
+      </Helmet>
+      <div className="min-h-screen">
       {/* Header Section */}
       <section className="py-20 gradient-hero">
         <div className="container mx-auto px-4">
@@ -302,6 +303,7 @@ const Services = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

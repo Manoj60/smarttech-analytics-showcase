@@ -11,6 +11,7 @@ import JobForm from "@/components/Admin/JobForm";
 import SmartJobFilter from "@/components/Careers/SmartJobFilter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { Helmet } from 'react-helmet-async';
 
 interface Job {
   id: string;
@@ -74,12 +75,6 @@ const Careers = () => {
     }
 
     fetchJobs();
-
-    // Set canonical URL
-    const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) {
-      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/careers');
-    }
   }, []);
 
   const fetchJobs = async (retry = 0) => {
@@ -211,6 +206,13 @@ const Careers = () => {
 
   return (
     <>
+      <Helmet>
+        <title>Careers - Join Our Team | Smart Tech Analytics</title>
+        <meta name="description" content="Build the future of analytics with Smart Tech Analytics. Explore exciting career opportunities in AI, data science, cloud computing, and business intelligence." />
+        <link rel="canonical" href="https://www.smarttechanalytics.com/careers" />
+        <meta property="og:url" content="https://www.smarttechanalytics.com/careers" />
+        <meta property="og:title" content="Careers - Join Our Team" />
+      </Helmet>
       <div className="min-h-screen">
         {/* Hero Section */}
         <section className="py-20 lg:py-32 bg-secondary/50">

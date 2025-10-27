@@ -8,15 +8,9 @@ import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Mail, Phone, MapPin, Clock, LinkedinIcon, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Helmet } from 'react-helmet-async';
 
 const Contact = () => {
-  useEffect(() => {
-    // Set canonical URL
-    const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) {
-      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/contact');
-    }
-  }, []);
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: '',
@@ -73,7 +67,15 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen">
+    <>
+      <Helmet>
+        <title>Contact Us - Get In Touch | Smart Tech Analytics</title>
+        <meta name="description" content="Ready to transform your business with data-driven solutions? Contact Smart Tech Analytics today. We're here to help you achieve your data and analytics goals." />
+        <link rel="canonical" href="https://www.smarttechanalytics.com/contact" />
+        <meta property="og:url" content="https://www.smarttechanalytics.com/contact" />
+        <meta property="og:title" content="Contact Us - Get In Touch" />
+      </Helmet>
+      <div className="min-h-screen">
       {/* Header Section */}
       <section className="py-20 gradient-hero">
         <div className="container mx-auto px-4">
@@ -350,6 +352,7 @@ const Contact = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

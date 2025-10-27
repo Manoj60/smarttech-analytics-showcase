@@ -3,16 +3,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Users, Target, Lightbulb, Award, Heart } from 'lucide-react';
 import heroImage from '@/assets/hero-image.jpg';
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 
 const Home = () => {
-  useEffect(() => {
-    // Set canonical URL
-    const canonical = document.querySelector('link[rel="canonical"]');
-    if (canonical) {
-      canonical.setAttribute('href', 'https://www.smarttechanalytics.com/');
-    }
-  }, []);
   const leadership = [
     {
       name: "Manoj Regmi",
@@ -50,7 +43,16 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen">
+    <>
+      <Helmet>
+        <title>Smart Tech Analytics - AI & Data Consulting Solutions</title>
+        <meta name="description" content="Transform your business with cutting-edge AI and analytics solutions. Smart Tech Analytics delivers data-driven insights that drive innovation and growth." />
+        <link rel="canonical" href="https://www.smarttechanalytics.com/" />
+        <meta property="og:url" content="https://www.smarttechanalytics.com/" />
+        <meta property="og:title" content="Smart Tech Analytics - AI & Data Consulting Solutions" />
+        <meta property="og:description" content="Transform your business with cutting-edge AI and analytics solutions." />
+      </Helmet>
+      <div className="min-h-screen">
       {/* Hero Section */}
       <section className="relative py-20 lg:py-32 overflow-hidden">
         <div className="absolute inset-0 gradient-hero opacity-90"></div>
@@ -212,6 +214,7 @@ const Home = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 
