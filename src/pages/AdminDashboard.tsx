@@ -65,8 +65,23 @@ const AdminDashboard = () => {
   const { userProfile, signOut } = useAuth();
 
   useEffect(() => {
+    // Add noindex meta tag for SEO
+    document.title = "Admin Dashboard | Smart Tech Analytics";
+    const metaRobots = document.createElement('meta');
+    metaRobots.name = 'robots';
+    metaRobots.content = 'noindex, nofollow';
+    document.head.appendChild(metaRobots);
+
     fetchJobs();
     fetchApplications();
+
+    return () => {
+      // Cleanup meta tag
+      const existingMeta = document.querySelector('meta[name="robots"][content="noindex, nofollow"]');
+      if (existingMeta) {
+        document.head.removeChild(existingMeta);
+      }
+    };
   }, []);
 
   const fetchJobs = async () => {
