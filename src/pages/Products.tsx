@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { BarChart3, Brain, TrendingUp, Database, Eye, Zap } from 'lucide-react';
+import { BarChart3, Brain, TrendingUp, Database, Eye, Zap, ShoppingCart, Shield } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 const Products = () => {
@@ -75,6 +75,30 @@ const Products = () => {
         {
           name: "Financial Analytics Platform",
           description: "Specialized BI solution for financial analysis, budgeting, forecasting, and regulatory reporting."
+        }
+      ]
+    },
+    {
+      title: "Retail Verticals",
+      icon: <ShoppingCart className="w-8 h-8 text-primary" />,
+      products: [
+        {
+          name: "Himali Pasal LLC",
+          description: "E-commerce platform connecting customers with authentic Himalayan products. Visit www.himalipasal.com to explore our retail solutions."
+        },
+        {
+          name: "ScanShop",
+          description: "Retail software solution providing inventory management, point-of-sale systems, and customer analytics for modern retail businesses."
+        }
+      ]
+    },
+    {
+      title: "Data Quality",
+      icon: <Shield className="w-8 h-8 text-accent" />,
+      products: [
+        {
+          name: "Data Guardian",
+          description: "Software product ensuring data integrity, validation, and quality monitoring across your entire data ecosystem and e-commerce operations."
         }
       ]
     }
