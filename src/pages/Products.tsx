@@ -161,12 +161,25 @@ const Products = () => {
                           {product.description}
                         </p>
                         <div className="flex flex-col space-y-3">
-                          <Button variant="default" size="sm" asChild>
-                            <Link to="/contact">Learn More</Link>
-                          </Button>
-                          <Button variant="outline" size="sm" asChild>
-                            <Link to="/contact">View Case Studies</Link>
-                          </Button>
+                          {product.name === "Himali Pasal LLC" ? (
+                            <>
+                              <Button variant="default" size="sm" asChild>
+                                <a href="https://www.himalipasal.com" target="_blank" rel="noopener noreferrer">Learn More</a>
+                              </Button>
+                              <Button variant="outline" size="sm" asChild>
+                                <a href="https://www.himalipasal.com" target="_blank" rel="noopener noreferrer">View Case Studies</a>
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button variant="default" size="sm" asChild>
+                                <Link to="/contact">Learn More</Link>
+                              </Button>
+                              <Button variant="outline" size="sm" asChild>
+                                <Link to="/contact">View Case Studies</Link>
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </CardContent>
                     </Card>
