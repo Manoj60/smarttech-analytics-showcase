@@ -97,7 +97,7 @@ const Products = () => {
       icon: <Shield className="w-8 h-8 text-accent" />,
       products: [
         {
-          name: "Data Guardian",
+          name: "Data Quality Guardian",
           description: "Software product ensuring data integrity, validation, and quality monitoring across your entire data ecosystem and e-commerce operations."
         }
       ]
