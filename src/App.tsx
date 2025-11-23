@@ -12,6 +12,7 @@ import Services from "./pages/Services";
 import CaseStudies from "./pages/CaseStudies";
 import Contact from "./pages/Contact";
 import Careers from "./pages/Careers";
+import Blog from "./pages/Blog";
 import Auth from "./pages/Auth";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,7 @@ const App = () => (
               <Route path="/case-studies" element={<CaseStudies />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/careers" element={<Careers />} />
+              <Route path="/blog" element={<Blog />} />
               <Route path="/auth" element={<Auth />} />
               <Route 
                 path="/admin" 

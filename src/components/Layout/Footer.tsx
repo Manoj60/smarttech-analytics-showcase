@@ -30,6 +30,7 @@ const Footer = () => {
                 { name: 'Products', href: '/products' },
                 { name: 'Services', href: '/services' },
                 { name: 'Case Studies', href: '/case-studies' },
+                { name: 'Blog', href: '/blog' },
                 { name: 'Careers', href: '/careers' },
                 { name: 'Sign In', href: '/auth' }
               ].map((item) => (
