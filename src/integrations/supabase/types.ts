@@ -379,14 +379,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      cleanup_expired_conversations: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      is_admin: {
-        Args: { user_id_param: string }
-        Returns: boolean
-      }
+      cleanup_expired_conversations: { Args: never; Returns: number }
+      is_admin: { Args: { user_id_param: string }; Returns: boolean }
       verify_conversation_access: {
         Args: {
           conversation_id_param: string
