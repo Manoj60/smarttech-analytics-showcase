@@ -9,7 +9,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { PlusCircle, Calendar, User } from 'lucide-react';
+import { PlusCircle, Calendar, User, Edit, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface BlogPost {
   id: string;
@@ -29,6 +39,8 @@ const Blog = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
+  const [deletePostId, setDeletePostId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -83,38 +95,108 @@ const Blog = () => {
     const tags = formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : [];
 
     try {
+      if (editingPost) {
+        // Update existing post
+        const { error } = await supabase
+          .from('blog_posts')
+          .update({
+            title: formData.title,
+            slug,
+            content: formData.content,
+            excerpt: formData.excerpt || null,
+            tags,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', editingPost.id);
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Blog post updated successfully"
+        });
+      } else {
+        // Create new post
+        const { error } = await supabase
+          .from('blog_posts')
+          .insert({
+            title: formData.title,
+            slug,
+            content: formData.content,
+            excerpt: formData.excerpt || null,
+            author_id: user.id,
+            author_name: user.email || 'Anonymous',
+            tags,
+            is_published: true,
+            published_at: new Date().toISOString()
+          });
+
+        if (error) throw error;
+
+        toast({
+          title: "Success",
+          description: "Blog post created successfully"
+        });
+      }
+
+      setFormData({ title: '', content: '', excerpt: '', tags: '' });
+      setShowCreateForm(false);
+      setEditingPost(null);
+      fetchPosts();
+    } catch (error) {
+      console.error('Error saving post:', error);
+      toast({
+        title: "Error",
+        description: `Failed to ${editingPost ? 'update' : 'create'} blog post`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEdit = (post: BlogPost) => {
+    setEditingPost(post);
+    setFormData({
+      title: post.title,
+      content: post.content,
+      excerpt: post.excerpt || '',
+      tags: post.tags ? post.tags.join(', ') : ''
+    });
+    setShowCreateForm(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deletePostId) return;
+
+    try {
       const { error } = await supabase
         .from('blog_posts')
-        .insert({
-          title: formData.title,
-          slug,
-          content: formData.content,
-          excerpt: formData.excerpt || null,
-          author_id: user.id,
-          author_name: user.email || 'Anonymous',
-          tags,
-          is_published: true,
-          published_at: new Date().toISOString()
-        });
+        .delete()
+        .eq('id', deletePostId);
 
       if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Blog post created successfully"
+        description: "Blog post deleted successfully"
       });
 
-      setFormData({ title: '', content: '', excerpt: '', tags: '' });
-      setShowCreateForm(false);
       fetchPosts();
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error('Error deleting post:', error);
       toast({
         title: "Error",
-        description: "Failed to create blog post",
+        description: "Failed to delete blog post",
         variant: "destructive"
       });
+    } finally {
+      setDeletePostId(null);
     }
+  };
+
+  const handleCancelEdit = () => {
+    setShowCreateForm(false);
+    setEditingPost(null);
+    setFormData({ title: '', content: '', excerpt: '', tags: '' });
   };
 
   return (
@@ -132,7 +214,7 @@ const Blog = () => {
               <p className="text-muted-foreground">Insights, news, and updates from our team</p>
             </div>
             {isAdmin() && (
-              <Button onClick={() => setShowCreateForm(!showCreateForm)}>
+              <Button onClick={() => showCreateForm ? handleCancelEdit() : setShowCreateForm(true)}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 {showCreateForm ? 'Cancel' : 'New Post'}
               </Button>
@@ -142,8 +224,10 @@ const Blog = () => {
           {showCreateForm && isAdmin() && (
             <Card className="mb-8">
               <CardHeader>
-                <CardTitle>Create New Blog Post</CardTitle>
-                <CardDescription>Share your insights with the community</CardDescription>
+                <CardTitle>{editingPost ? 'Edit Blog Post' : 'Create New Blog Post'}</CardTitle>
+                <CardDescription>
+                  {editingPost ? 'Update your blog post' : 'Share your insights with the community'}
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-4">
@@ -192,7 +276,14 @@ const Blog = () => {
                       placeholder="AI, Analytics, Technology"
                     />
                   </div>
-                  <Button type="submit">Publish Post</Button>
+                  <div className="flex gap-2">
+                    <Button type="submit">{editingPost ? 'Update Post' : 'Publish Post'}</Button>
+                    {editingPost && (
+                      <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                        Cancel
+                      </Button>
+                    )}
+                  </div>
                 </form>
               </CardContent>
             </Card>
@@ -242,16 +333,51 @@ const Blog = () => {
                       </div>
                     )}
                   </CardContent>
-                  <CardFooter>
-                    <Link to={`/blog/${post.slug}`} className="w-full">
+                  <CardFooter className="flex gap-2">
+                    <Link to={`/blog/${post.slug}`} className="flex-1">
                       <Button variant="outline" className="w-full">Read More</Button>
                     </Link>
+                    {isAdmin() && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(post)}
+                          title="Edit post"
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setDeletePostId(post.id)}
+                          title="Delete post"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </CardFooter>
                 </Card>
               ))}
             </div>
           )}
         </div>
+
+        <AlertDialog open={!!deletePostId} onOpenChange={() => setDeletePostId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the blog post.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </>
   );
