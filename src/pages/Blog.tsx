@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -242,7 +243,9 @@ const Blog = () => {
                     )}
                   </CardContent>
                   <CardFooter>
-                    <Button variant="outline" className="w-full">Read More</Button>
+                    <Link to={`/blog/${post.slug}`} className="w-full">
+                      <Button variant="outline" className="w-full">Read More</Button>
+                    </Link>
                   </CardFooter>
                 </Card>
               ))}
