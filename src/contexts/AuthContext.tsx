@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
 
 interface AuthContextType {
   user: User | null;
@@ -87,11 +88,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    // Restrict sign-in to admin email only
-    if (email !== 'info@smarttechanalytics.com') {
-      const error = new Error('Access denied. Only admin can sign in.');
+    // Validate email format
+    const emailSchema = z.string().email();
+    const emailValidation = emailSchema.safeParse(email);
+    
+    if (!emailValidation.success) {
+      const error = new Error('Please enter a valid email address.');
       toast({
-        title: "Sign In Failed",
+        title: "Invalid Email",
         description: error.message,
         variant: "destructive",
       });
@@ -104,9 +108,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
     
     if (error) {
+      let errorMessage = error.message;
+      
+      // Provide more specific error messages
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = 'Please confirm your email address before signing in. Check your inbox for the confirmation link.';
+      }
+      
       toast({
         title: "Sign In Failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     }
@@ -115,6 +128,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const signUp = async (email: string, password: string, fullName: string) => {
+    // Validate email format
+    const emailSchema = z.string().email();
+    const emailValidation = emailSchema.safeParse(email);
+    
+    if (!emailValidation.success) {
+      const error = new Error('Please enter a valid email address.');
+      toast({
+        title: "Invalid Email",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      const error = new Error('Password must be at least 6 characters long.');
+      toast({
+        title: "Weak Password",
+        description: error.message,
+        variant: "destructive",
+      });
+      return { error };
+    }
+
     const redirectUrl = `${window.location.origin}/auth`;
     
     const { data, error } = await supabase.auth.signUp({
@@ -129,9 +167,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     });
     
     if (error) {
+      let errorMessage = error.message;
+      
+      // Provide more specific error messages
+      if (error.message.includes('already registered')) {
+        errorMessage = 'This email is already registered. Please sign in or use a different email.';
+      }
+      
       toast({
         title: "Sign Up Failed",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } else if (data.user) {
