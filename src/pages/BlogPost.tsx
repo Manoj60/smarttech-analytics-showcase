@@ -59,7 +59,7 @@ const BlogPost = () => {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen">
         <div className="container mx-auto px-4 py-12">
           <div className="text-center py-12">
             <p className="text-muted-foreground">Loading post...</p>
@@ -71,7 +71,7 @@ const BlogPost = () => {
 
   if (!post) {
     return (
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen">
         <div className="container mx-auto px-4 py-12">
           <div className="text-center py-12">
             <h1 className="text-2xl font-bold mb-4">Post Not Found</h1>
@@ -95,7 +95,7 @@ const BlogPost = () => {
         <meta name="description" content={post.excerpt || post.content.substring(0, 160)} />
       </Helmet>
 
-      <main className="min-h-screen bg-background">
+      <main className="min-h-screen">
         <div className="container mx-auto px-4 py-12">
           <Link to="/blog">
             <Button variant="ghost" className="mb-6">
