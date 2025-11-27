@@ -206,7 +206,7 @@ const Blog = () => {
         <meta name="description" content="Read the latest insights, news, and updates from Smart Tech Analytics on AI, data analytics, and technology trends." />
       </Helmet>
 
-      <main className="min-h-screen">
+      <main className="min-h-screen bg-secondary/50">
         <div className="container mx-auto px-4 py-12">
           <div className="flex justify-between items-center mb-8">
             <div>
