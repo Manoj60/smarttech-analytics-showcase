@@ -77,6 +77,7 @@ const Auth = () => {
       <Helmet>
         <title>Sign In | Smart Tech Analytics</title>
         <meta name="robots" content="noindex, nofollow" />
+        <link rel="canonical" href="https://www.smarttechanalytics.com/auth" />
       </Helmet>
       <div className="min-h-screen">
       {/* Header Section */}
