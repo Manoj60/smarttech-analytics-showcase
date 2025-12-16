@@ -13,6 +13,7 @@ const Header = () => {
     { name: 'Home', href: '/' },
     { name: 'Products', href: '/products' },
     { name: 'Services', href: '/services' },
+    { name: 'Careers', href: '/careers' },
     { name: 'Case Studies', href: '/case-studies' },
     { name: 'Contact', href: '/contact' }
   ];
@@ -61,9 +62,14 @@ const Header = () => {
                 </Button>
               </div>
             ) : (
-              <Button variant="default" size="sm" asChild>
-                <Link to="/contact">Get Started</Link>
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link to="/auth">Sign In</Link>
+                </Button>
+                <Button variant="default" size="sm" asChild>
+                  <Link to="/contact">Get Started</Link>
+                </Button>
+              </div>
             )}
           </nav>
 
@@ -113,11 +119,18 @@ const Header = () => {
                   </Button>
                 </div>
               ) : (
-                <Button variant="default" size="sm" className="w-fit" asChild>
-                  <Link to="/contact" onClick={() => setIsMenuOpen(false)}>
-                    Get Started
-                  </Link>
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button variant="ghost" size="sm" className="w-fit" asChild>
+                    <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                      Sign In
+                    </Link>
+                  </Button>
+                  <Button variant="default" size="sm" className="w-fit" asChild>
+                    <Link to="/contact" onClick={() => setIsMenuOpen(false)}>
+                      Get Started
+                    </Link>
+                  </Button>
+                </div>
               )}
             </nav>
           </div>
