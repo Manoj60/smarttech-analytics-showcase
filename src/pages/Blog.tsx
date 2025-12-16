@@ -204,6 +204,9 @@ const Blog = () => {
       <Helmet>
         <title>Blog - Smart Tech Analytics</title>
         <meta name="description" content="Read the latest insights, news, and updates from Smart Tech Analytics on AI, data analytics, and technology trends." />
+        <link rel="canonical" href="https://www.smarttechanalytics.com/blog" />
+        <meta property="og:url" content="https://www.smarttechanalytics.com/blog" />
+        <meta property="og:title" content="Blog - Smart Tech Analytics" />
       </Helmet>
 
       <main className="min-h-screen bg-secondary/50">
